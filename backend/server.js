@@ -12,8 +12,6 @@ app.get("/", (req, res) => {
 });
 
 app.post("/auth/login", (req, res) => {
-  console.log(req.body);
-
   const token = jwt.sign(
     {
       email: req.body.email,
@@ -24,7 +22,11 @@ app.post("/auth/login", (req, res) => {
 
   res.json({
     succees: true,
-    data: { userData: req.body.name, token: token },
+    data: {
+      userName: req.body.name,
+      surname: req.body.surname,
+    },
+    token,
   });
 });
 
