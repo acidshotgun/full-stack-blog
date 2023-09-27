@@ -20,6 +20,10 @@ FULL-STACK-BLOG
 - [x] React Markdown / Simple Editor
 - [x] Axios
 
+# ОСОБО НЕПОНЯТНОЕ ПИШУ ТУТ
+
+-
+
 <br>
 <br>
 <hr>
@@ -66,6 +70,9 @@ app.post("/auth/login", (req, res) => {
 
 <h3>+ Создание модели user / UserModal</h3>
 
+- [x] **Модель (Model) Mongoose** - это конструктор, который позволяет создавать экземпляры документов на основе **схемы**. Модели предоставляют методы для создания, чтения, обновления и удаления документов в коллекции MongoDB.
+- [x] **Схема (Schema) Mongoose** - это описание структуры документов, которые будут храниться в MongoDB коллекции. Схемы определяют поля, их типы данных, допустимые значения и другие ограничения для документов в коллекции.
+
 ```javascript
 import mongoose from "mongoose";
 
@@ -89,10 +96,12 @@ const UserSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+// Пароль шифроваться будет отдельно
     passwordHash: {
       type: String,
       required: true,
     },
+// Аватар необязателен - поэтому просто укажем тип
     avatarUrl: String,
   },
   //  4) timestamps - автосоздание даты
@@ -107,3 +116,27 @@ const UserSchema = new mongoose.Schema(
 //      б) Схема этой модели.
 export default mongoose.model("User", UserSchema);
 ```
+
+<br>
+<hr>
+
+<h3>+ Валидация / Express Validator</h3>
+
+- [x] Перед тем, как делать запрос и тд, нужно сделать валидацию, чтобы проверить корректность информации при помощи Express Validator
+
++ Создается папка validations, где будут файлы валидации под разные данные.
+
+```javascript
+// Импортируем метод для валидации данных в теле запроса body()
+import { body } from "express-validator";
+
+// Создаем массив с полями + сообщением и прописываем опции
+// Опции типа дллина, обязательность и тд их можно посмотреть в сети
+export const registerValidation = [
+  body("email", "Неверный формат почты").isEmail(),
+  body("password", "Пароль должен быть от 5 символов").isLength({ min: 5 }),
+  body("fullName", "Укажите имя").isLength({ min: 3 }),
+  body("avatarUrl", "Неверная ссылка на аватарку").optional().isURL(),
+];
+```
+
