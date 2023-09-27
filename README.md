@@ -38,6 +38,7 @@ app.post("/auth/login", (req, res) => {
     "secret123"
   );
 
+// Это ответ от сервера
   res.json({
     succees: true,
     data: {
