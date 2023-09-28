@@ -83,7 +83,10 @@ import mongoose from "mongoose";
 // Например:
 //  1) type - тип поля
 //  2) required - поле обязательно
+
 //  3) unique - поле должно быть уникально
+//      ЭТО ПОЛЕ СОЗДАЕТ ИНДЕКС УНИКАЛЬНОСТИ В MONGO
+//      И ПРИ СОВПАДЕНИИ ПАРАМЕТРА - MONGO БУДЕТ ВЫДАВАТЬ ОШИБКУ
 // Их больше
 const UserSchema = new mongoose.Schema(
   {
