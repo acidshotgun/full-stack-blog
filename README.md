@@ -21,8 +21,9 @@ FULL-STACK-BLOG
 - [x] Axios
 
 # ОСОБО НЕПОНЯТНОЕ ПИШУ ТУТ
-
--
+- [x] ПРО ССЫЛКИ В MONGODB - как формируются коллекции и как подулючится не к кластеру а конкретно к БД 50 МИНУТА В РОЛИКЕ
+- [x] ПРО next() в middlewear и сам middlewear
+ -
 
 <br>
 <br>
@@ -180,9 +181,7 @@ app.post("/auth/register", registerValidation, async (req, res) => {
 <br>
 <hr>
 
-<h3>+ Создание пользователя в БД + bcrypt</h3>
-
-<h4>bcrypt</h4>
+<h3>+ bcrypt</h3>
 
 Важная часть для защиты данных - это шифрование. Например шифрование паролей. Для этого используется библиотека **`bcrypt`**. Шаги:
 
@@ -235,7 +234,35 @@ import bcrypt from "bcrypt";
 ```
 
 <br>
-<br>
+<hr>
 
+<h3>+ Создание пользователя в БД </h3>
 
+- [x] На основе описанной модели **`UserModel`** для `user` - мы создаем пользователя в базе данных при post-запросе.
 
+```javascript
+// Сначала импортируем модель
+import UserModel from "./models/User.js";
+
+  // Тут на основе модели UserModel подготавливаем объект пользователя для БД
+  // ВАЖНО, что поля должны соответствовать описанным в МОДЕЛИ
+  // В кач-ве ключей подставляем значения из req.body(тело запроса) кроме пароля
+  // Пароль подставляется уже зашифрованный
+  const userData = new UserModel({
+    email: req.body.email,
+    fullName: req.body.fullName,
+    passwordHash: passwordHash,
+    avatarUrl: req.body.avatarUrl,
+  });
+
+  // Сохраняем пользователя в MongoDB методом save()
+  // Результат, который вернет Mongo помещаем в user и его возвращаем в ответе в JSON - формате
+  const user = await userData.save();
+  res.json(user);
+
+  // МОЖНО ПРОМИСОМ
+  // userData
+  //   .save()
+  //   .then((userData) => res.status(200).json(userData))
+  //   .catch((error) => console.log(error));
+``` 
