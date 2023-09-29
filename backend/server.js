@@ -25,30 +25,53 @@ app.get("/", (req, res) => {
 });
 
 app.post("/auth/register", registerValidation, async (req, res) => {
-  const errors = validationResult(req);
+  try {
+    const errors = validationResult(req);
 
-  if (!errors.isEmpty()) {
-    return res.status(400).json(errors.array());
+    if (!errors.isEmpty()) {
+      return res.status(400).json(errors.array());
+    }
+
+    // Создаем переменную с паролем из req.body
+    // Генерируем соль - bcrypt.genSalt(10);
+    // Создаем переменную, в которой будет зашифрованный пароль - bcrypt.hash()
+
+    // Теперь в переменной passwordHash находится зашифрованный пароль
+    // Он и будет сохранен в базу данных.
+    const password = req.body.password;
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    // Тут на основе модели UserModel подготавливаем объект пользователя для БД
+    // ВАЖНО, что поля должны соответствовать описанным в МОДЕЛИ
+    // В кач-ве ключей подставляем значения из req.body(тело запроса) кроме пароля
+    // Пароль подставляется уже зашифрованный
+    const userData = new UserModel({
+      email: req.body.email,
+      fullName: req.body.fullName,
+      passwordHash: passwordHash,
+      avatarUrl: req.body.avatarUrl,
+    });
+
+    // Сохраняем пользователя в MongoDB методом save()
+    // Результат, который вернет Mongo помещаем в user и его возвращаем в ответе
+    const user = await userData.save();
+    res.json({ ...user });
+
+    // МОЖНО ПРОМИСОМ
+    // userData
+    //   .save()
+    //   .then((userData) => res.status(200).json(userData))
+    //   .catch((error) => console.log(error));
+
+    // Обрабатываем ошибку
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: 400,
+      message: "Не удалось зарегистрироваться",
+    });
   }
-
-  const password = req.body.password;
-  const salt = await bcrypt.genSalt(10);
-  const passwordHash = await bcrypt.hash(password, salt);
-
-  const doc = new UserModel({
-    email: req.body.email,
-    fullName: req.body.fullName,
-    passwordHash: passwordHash,
-    avatarUrl: req.body.avatarUrl,
-  });
-
-  // const user = await doc.save();
-  // res.json(user);
-
-  doc
-    .save()
-    .then((post) => res.status(200).json(post))
-    .catch((error) => console.log(error));
 });
 
 app.listen(process.env.PORT, (error) => {
