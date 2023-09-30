@@ -8,6 +8,8 @@ import { validationResult } from "express-validator";
 
 import UserModel from "./models/User.js";
 
+import checkAuths from "./utils/checkAuths.js";
+
 const app = express();
 
 // Подключение и соеденение сервера с БД
@@ -108,6 +110,7 @@ app.post("/auth/register", registerValidation, async (req, res) => {
     const newUser = new UserModel({
       email: req.body.email,
       fullName: req.body.fullName,
+      surname: req.body.surname,
       passwordHash: passHash,
       avatarUrl: req.body.avatarUrl,
     });
@@ -145,6 +148,29 @@ app.post("/auth/register", registerValidation, async (req, res) => {
     res.status(400).json({
       status: 400,
       message: "Не удалось зарегистрироваться",
+    });
+  }
+});
+
+// Получение ин-ф о пользователе
+app.get("/auth/me", checkAuths, async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.userId);
+
+    if (!user) {
+      res.status(404).json({
+        message: "Пользователь не найден",
+      });
+    }
+
+    const { passwordHash, ...userData } = user._doc;
+
+    res.json({ ...userData });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: 400,
+      message: "Нет доступа",
     });
   }
 });
