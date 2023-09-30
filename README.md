@@ -386,6 +386,7 @@ app.post("/auth/login", async (req, res) => {
     // Если email такой есть - то в user будет информация об этом пользователе (знакомый {...user})
     const user = await UserModel.findOne({ email: req.body.email });
 
+    // если такого user нет - останавливаем и возвращаем сообщение
     if (!user) {
       return res.status(400).json({
         message: "Неверный логин или пароль",
