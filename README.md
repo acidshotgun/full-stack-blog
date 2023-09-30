@@ -369,6 +369,13 @@ app.post("/auth/register", registerValidation, async (req, res) => {
 + Как и в регистрации - возвращаем данные из того огромного `{...user._doc}` и возвращаем данные юзера кроме шифрованного пароля. (он только для авторизации)
 + При ошибке выведем ошибку при авторизации
 
+<br>
+<hr>
+
+<h3>+ КОД</h3>
+
+- [x] Код аналогичен с регистрацией + есть комменты.
+
 ```javascript
 // АВТОРИЗАЦИЯ
 app.post("/auth/login", async (req, res) => {
@@ -379,6 +386,7 @@ app.post("/auth/login", async (req, res) => {
     // Если email такой есть - то в user будет информация об этом пользователе (знакомый {...user})
     const user = await UserModel.findOne({ email: req.body.email });
 
+    // если такого user нет - останавливаем и возвращаем сообщение
     if (!user) {
       return res.status(400).json({
         message: "Неверный логин или пароль",
