@@ -71,7 +71,7 @@ app.post("/auth/login", (req, res) => {
 <br>
 <hr>
 
-<h3>+ Создание модели user / UserModal</h3>
+<h3>+ Создание модели user / UserModal / Mongo DB</h3>
 
 - [x] **`Модель (Model) Mongoose`** - это конструктор, который позволяет создавать экземпляры документов на основе **`схемы`**. Модели предоставляют методы для создания, чтения, обновления и удаления документов в коллекции MongoDB.
 - [x] **`Схема (Schema) Mongoose`** - это описание структуры документов, которые будут храниться в MongoDB коллекции. Схемы определяют поля, их типы данных, допустимые значения и другие ограничения для документов в коллекции.
@@ -96,18 +96,21 @@ const UserSchema = new mongoose.Schema(
     fullName: {
       type: String,
       required: true,
+      unique: true,
+    },
+    surname: {
+      type: String,
+      required: true,
     },
     email: {
       type: String,
       required: true,
       unique: true,
     },
-// Пароль шифроваться будет отдельно
     passwordHash: {
       type: String,
       required: true,
     },
-// Аватар необязателен - поэтому просто укажем тип
     avatarUrl: String,
   },
   //  4) timestamps - автосоздание даты
@@ -287,6 +290,7 @@ import UserModel from "./models/User.js";
 + Возвращаем данные на клиент. Деструктуризацией + spread можно вернуть конкретные данные или не возвращать как напримере зашифрованного пароля, тк при регистрации это инфа не нужна.
 
 ```javascript
+// РЕГИСТРАЦИЯ
 app.post("/auth/register", registerValidation, async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -544,5 +548,13 @@ app.get("/auth/me", checkAuths, async (req, res) => {
     });
   }
 });
+```
 
-``` 
+- [x] Как итог - этот запрос будет говорить - авторизован пользователь или нет. И благодаря ему в react-приложении мы сможем показать информацию о профиле и тд.
+
+<br>
+<br>
+<hr>
+
+<h2>ФУНКЦИОНАЛ CRUD-ОПЕРАЦИЙ </h2>
+
