@@ -520,7 +520,7 @@ app.get("/auth/me", checkAuths, async (req, res) => {
   try {
     // Ищем пользвателя по userId,
     // Его мы вшили в req на этапе middleware
-    // Информация о пользователе будет лежать в user
+    // Информация о пользователе помещаем в user
     const user = await UserModel.findById(req.userId);
 
     // User не найден - ошибка
