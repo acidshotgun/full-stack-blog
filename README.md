@@ -558,3 +558,4 @@ app.get("/auth/me", checkAuths, async (req, res) => {
 
 <h2>ФУНКЦИОНАЛ CRUD-ОПЕРАЦИЙ </h2>
 
+<h3>+ Создание поста</h3>
