@@ -505,4 +505,44 @@ export default (req, res, next) => {
 <br>
 <hr>
 
-<h3>+ ПОЛУЧЕНИЕ ИНФОРМАЦИИ О ПОЛЬЗОВАТЕЛЕ</h3>
+<h3>+ Получение информации о пользователе</h3>
+
+- [x] Как только `middleware` отработал успешно - он передает выполнение фенкции дальше. Она уже выполнит поиск пользователя и вывелет данные о нем.
+
++ На основе модели `UserModel` ищем пользователя по id методом `findById()`, как аргумент указал `userId`, который мы вшили в запрос в `middleware`.
++ Если найден пользователь - выводим данные о нем из `user._doc`
+
+```javascript
+//    1) роут
+//    2) midleware
+//    3) функция
+app.get("/auth/me", checkAuths, async (req, res) => {
+  try {
+    // Ищем пользвателя по userId,
+    // Его мы вшили в req на этапе middleware
+    // Информация о пользователе будет лежать в user
+    const user = await UserModel.findById(req.userId);
+
+    // User не найден - ошибка
+    if (!user) {
+      res.status(404).json({
+        message: "Пользователь не найден",
+      });
+    }
+
+    // User найден - достаем все кроме пароля и отдаем на клиент
+    // из user._doc
+    const { passwordHash, ...userData } = user._doc;
+
+    res.json({ ...userData });
+    // Ошибка, если в запросе что-то не так
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: 400,
+      message: "Нет доступа",
+    });
+  }
+});
+
+``` 
