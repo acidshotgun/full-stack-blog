@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import PostModel from "../models/Post.js";
 import UserModel from "../models/User.js";
 
@@ -33,7 +34,47 @@ const create = async (req, res) => {
   }
 };
 
-const remove = async (req, res) => {};
+// КОНСПЕТК!!
+// Транзакции учить!
+const remove = async (req, res) => {
+  const deletePostSession = await mongoose.startSession();
+  deletePostSession.startTransaction();
+
+  try {
+    const postId = req.params.id;
+
+    const deletedPost = await PostModel.findByIdAndDelete(postId).session(
+      deletePostSession
+    );
+
+    if (!deletedPost) {
+      return res.status(404).json({
+        message: "Статья не найдена",
+      });
+    }
+
+    await UserModel.findByIdAndUpdate(
+      req.userId,
+      { $pull: { posts: postId } },
+      { new: true }
+    ).session(deletePostSession);
+
+    await deletePostSession.commitTransaction();
+    deletePostSession.endSession();
+
+    res.json({
+      message: "Пост удален",
+    });
+  } catch (err) {
+    await deletePostSession.abortTransaction();
+    deletePostSession.endSession();
+
+    console.log(err);
+    res.status(500).json({
+      message: "Не удалось удалить статью",
+    });
+  }
+};
 
 const getAll = async (req, res) => {
   try {
