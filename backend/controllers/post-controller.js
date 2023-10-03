@@ -1,4 +1,5 @@
 import PostModel from "../models/Post.js";
+import UserModel from "../models/User.js";
 
 const create = async (req, res) => {
   try {
@@ -12,6 +13,16 @@ const create = async (req, res) => {
 
     const post = await newPost.save();
 
+    // Используя модель UserModel мы добавим пользователю пост
+    // Находим юзера в базе по userId(из токена) и обновляем его
+    // $push (опция) - добавит данные в массив, без обновления всего массива
+    // Теперь получая данные о юзере мы видем id всех его постов
+    await UserModel.findByIdAndUpdate(
+      req.userId,
+      { $push: { posts: post._id } },
+      { new: true }
+    );
+
     res.json(post);
   } catch (error) {
     console.log(error);
@@ -21,6 +32,8 @@ const create = async (req, res) => {
     });
   }
 };
+
+const remove = async (req, res) => {};
 
 const getAll = async (req, res) => {
   try {
@@ -36,4 +49,31 @@ const getAll = async (req, res) => {
   }
 };
 
-export { create, getAll };
+// В КУРСЕ НЕ РАБОТАЕТ ВАРИАНТ
+// findOneAndUpdate - теперь возвращает значение
+const getOne = async (req, res) => {
+  try {
+    const postId = req.params.id;
+
+    const updateResult = await PostModel.findOneAndUpdate(
+      { _id: postId },
+      { $inc: { viewsCount: 1 } },
+      { new: true }
+    ).populate("user");
+
+    if (!updateResult) {
+      return res.status(404).json({
+        message: "Статья не найдена",
+      });
+    }
+
+    res.json(updateResult);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      message: "Не удалось получить статью",
+    });
+  }
+};
+
+export { create, getAll, getOne, remove };

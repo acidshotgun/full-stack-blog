@@ -93,7 +93,7 @@ const login = async (req, res) => {
 
 const auth = async (req, res) => {
   try {
-    const user = await UserModel.findById(req.userId);
+    const user = await UserModel.findById(req.userId).populate("posts");
 
     if (!user) {
       res.status(404).json({
