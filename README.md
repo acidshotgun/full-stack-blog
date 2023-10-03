@@ -111,6 +111,9 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    // У пользователя будут данные о его созданных постах (массив постов)
+    // Для этого указываем тип (из монго) и ref (на что ссылается - т.е. связь)
+    posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
     avatarUrl: String,
   },
   //  4) timestamps - автосоздание даты
