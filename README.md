@@ -28,6 +28,7 @@ FULL-STACK-BLOG
   
 - [x] Расписать подробнее про связи в mongoose mongoose.Schema.Types.ObjectId, ref, и тд
 - [x] .populate("user").exec(); $push $pull и как поле отображает данные не в id а как подробные данные на основе связей.
+- [x] Транзакции в MongoDB (Есть в любой бд!!) Важно! 
 
 <br>
 <br>
