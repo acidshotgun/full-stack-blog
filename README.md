@@ -586,6 +586,7 @@ app.get("/auth/me", checkAuths, async (req, res) => {
 <h2>CRUD-ОПЕРАЦИЙ / ПОСТЫ </h2>
 
 - [x] Прежде чем писать функционал `crud-операций`, стоит сначала создать модель, которая будет описывать посты в базе данных.
+- [x] Тут уделяется особое внимание созданию связи между объектами `mongoose.Schema.Types.ObjectId`  
 
 ```javascript
 const PostSchema = new mongoose.Schema(
@@ -631,3 +632,58 @@ export default mongoose.model("Post", PostSchema);
 ```
 
 <h3>+ Создание поста</h3>
+
+```javascript
+// Создание поста
+const create = async (req, res) => {
+  // Первым делом нужно создать сессии и запустить её (асинхронная!)
+  // Чтобы обеспечить атомарность операции
+  const createPostSession = await mongoose.startSession();
+  createPostSession.startTransaction();
+
+  // На основе пост модели создаем новый пост из данных запроса
+  try {
+    const newPost = new PostModel({
+      title: req.body.title,
+      text: req.body.text,
+      imageUrl: req.body.imageUrl,
+      tags: req.body.tags,
+      user: req.userId,
+    });
+
+    // Сохраняем пост в БД + помещаем его в переменную post(чтобы вернуть)
+    //  + сначала сохраняем в сессии { createPostSession }
+    const post = await newPost.save({ createPostSession });
+
+    // Используя модель UserModel мы добавим пост в объект автора поста
+    // Находим юзера в базе по userId(из токена) и обновляем его
+    // $push (опция) - добавит данные в массив, без обновления всего массива
+    // Теперь получая данные о юзере мы видем id всех его постов
+    //  + указываем, что это происходит в сессии createPostSession
+    await UserModel.findByIdAndUpdate(
+      req.userId,
+      { $push: { posts: post._id } },
+      { new: true }
+    ).session(createPostSession);
+
+    // Если не произошло ошибок - фиксируем операции что были в сессии - commitTransaction()
+    // и завершаем сессию (коммит АСИНХРОННЫЙ)
+    await createPostSession.commitTransaction();
+    createPostSession.endSession();
+
+    // ернем созданный пост на клиент
+    res.json(post);
+  } catch (error) {
+    // В случае ошибки отменяем все действия в сессии abortTransaction() + завершаем
+    await createPostSession.abortTransaction();
+    createPostSession.endSession();
+
+    // обработка ошибки
+    console.log(error);
+    res.status(400).json({
+      status: 400,
+      message: "Не удалось создать пост",
+    });
+  }
+};
+```
