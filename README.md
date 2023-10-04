@@ -693,3 +693,66 @@ const create = async (req, res) => {
   }
 };
 ```
+
+<br>
+<hr>
+
+<h3>+ Удаление поста</h3>
+
+```javascript
+// Удаление поста
+// Аналогичный подход с транзакциями
+const remove = async (req, res) => {
+  const deletePostSession = await mongoose.startSession();
+  deletePostSession.startTransaction();
+
+  try {
+    // Удаление поста происходит по его id
+    // Он подставляется в url динамически и достается из req.params.id
+    const postId = req.params.id;
+
+    // На основе модели PostModel находим пост по id и удаляем его
+    // + сохраняем рещультат в переменную и указываем сессию
+    const deletedPost = await PostModel.findByIdAndDelete(postId).session(
+      deletePostSession
+    );
+
+    // Если переменная false - пост не найден - то ошибка
+    if (!deletedPost) {
+      return res.status(404).json({
+        message: "Статья не найдена",
+      });
+    }
+
+    // Если ок то далее удаляем пост у пользователя по его ID
+    // Его ID получен из middleware, который расшифровывает токен
+    // и из токена получаем id авторизованного пользователя в данный момент
+    // $pull удалит из массива posts объект c objectId - postId (получен выше из url)
+    //  + указываем что это в сессии
+    await UserModel.findByIdAndUpdate(
+      req.userId,
+      { $pull: { posts: postId } },
+      { new: true }
+    ).session(deletePostSession);
+
+    // Все ок - фиксируем операции в сессии commitTransaction() + завершаем
+    await deletePostSession.commitTransaction();
+    deletePostSession.endSession();
+
+    // пост удален
+    res.json({
+      message: "Пост удален",
+    });
+  } catch (err) {
+    // ошибка - отменяем транзакцию + завершаем сессию
+    await deletePostSession.abortTransaction();
+    deletePostSession.endSession();
+
+    // ошибки
+    console.log(err);
+    res.status(500).json({
+      message: "Не удалось удалить статью",
+    });
+  }
+};
+```
