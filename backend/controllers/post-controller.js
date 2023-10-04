@@ -2,7 +2,11 @@ import mongoose from "mongoose";
 import PostModel from "../models/Post.js";
 import UserModel from "../models/User.js";
 
+// Создание поста
 const create = async (req, res) => {
+  const createPostSession = await mongoose.startSession();
+  createPostSession.startTransaction();
+
   try {
     const newPost = new PostModel({
       title: req.body.title,
@@ -12,20 +16,22 @@ const create = async (req, res) => {
       user: req.userId,
     });
 
-    const post = await newPost.save();
+    const post = await newPost.save({ createPostSession });
 
-    // Используя модель UserModel мы добавим пользователю пост
-    // Находим юзера в базе по userId(из токена) и обновляем его
-    // $push (опция) - добавит данные в массив, без обновления всего массива
-    // Теперь получая данные о юзере мы видем id всех его постов
     await UserModel.findByIdAndUpdate(
       req.userId,
       { $push: { posts: post._id } },
       { new: true }
-    );
+    ).session(createPostSession);
+
+    await createPostSession.commitTransaction();
+    createPostSession.endSession();
 
     res.json(post);
   } catch (error) {
+    await createPostSession.abortTransaction();
+    createPostSession.endSession();
+
     console.log(error);
     res.status(400).json({
       status: 400,
@@ -34,8 +40,7 @@ const create = async (req, res) => {
   }
 };
 
-// КОНСПЕТК!!
-// Транзакции учить!
+// Удаление поста
 const remove = async (req, res) => {
   const deletePostSession = await mongoose.startSession();
   deletePostSession.startTransaction();
@@ -76,6 +81,7 @@ const remove = async (req, res) => {
   }
 };
 
+// Получить все посты
 const getAll = async (req, res) => {
   try {
     const posts = await PostModel.find().populate("user").exec();
@@ -90,8 +96,7 @@ const getAll = async (req, res) => {
   }
 };
 
-// В КУРСЕ НЕ РАБОТАЕТ ВАРИАНТ
-// findOneAndUpdate - теперь возвращает значение
+// Получение одного поста
 const getOne = async (req, res) => {
   try {
     const postId = req.params.id;
@@ -117,4 +122,34 @@ const getOne = async (req, res) => {
   }
 };
 
-export { create, getAll, getOne, remove };
+// Обновление поста
+const update = async (req, res) => {
+  try {
+    const postId = req.params.id;
+
+    await PostModel.findByIdAndUpdate(
+      postId,
+      {
+        title: req.body.title,
+        text: req.body.text,
+        imageUrl: req.body.imageUrl,
+        tags: req.body.tags,
+        user: req.userId,
+      },
+      {
+        new: true,
+      }
+    );
+
+    res.json({
+      message: `Пост ${postId} изменен`,
+    });
+  } catch (error) {
+    console.log(err);
+    res.status(500).json({
+      message: "Не удалось изменить статью",
+    });
+  }
+};
+
+export { create, getAll, getOne, remove, update };
