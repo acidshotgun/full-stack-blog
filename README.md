@@ -301,20 +301,24 @@ import UserModel from "./models/User.js";
 + Шифруем _id при помощи jwt
 + Возвращаем данные на клиент. Деструктуризацией + spread можно вернуть конкретные данные или не возвращать как напримере зашифрованного пароля, тк при регистрации это инфа не нужна.
 
+<h3>+ Код</h3>
+
 ```javascript
-// РЕГИСТРАЦИЯ
-app.post("/auth/register", registerValidation, async (req, res) => {
+// registration
+//  1) Роут для регистрации
+//  2) Валидация для регистрации (middleware)
+//  3) Вывод ошибки при валидации (middleware)
+//  4) Контрорллер на регистрацию
+router.post("/auth/register", registerValidation, handleValidationErrors, UserController.register);
+```
+
+```javascript
+// РЕГИСТРАЦИЯ (контроллер)
+const register = async (req, res) => {
   try {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json(errors.array());
-    }
-
-    // Создаем переменную с паролем из req.body
-    // Генерируем соль - bcrypt.genSalt(10);
-    // Создаем переменную, в которой будет зашифрованный пароль - bcrypt.hash()
-
+    // 1) Создаем переменную с паролем из req.body
+    // 2) енерируем соль - bcrypt.genSalt(10);
+    // 3) Создаем переменную, в которой будет зашифрованный пароль - bcrypt.hash()
     // Теперь в переменной passwordHash находится зашифрованный пароль
     // Он и будет сохранен в базу данных.
     const password = req.body.password;
