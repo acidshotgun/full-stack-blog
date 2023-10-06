@@ -123,28 +123,36 @@ const getOne = async (req, res) => {
 };
 
 // Обновление поста
+// Аналогично удалени / получению одного
 const update = async (req, res) => {
   try {
+    // Достаем id из запроса
     const postId = req.params.id;
 
+    // Найти по id => обновить
     await PostModel.findByIdAndUpdate(
+      // id gjcnf
       postId,
       {
+        // Что обновить и на что
         title: req.body.title,
         text: req.body.text,
         imageUrl: req.body.imageUrl,
         tags: req.body.tags,
         user: req.userId,
       },
+      // вернуть обновленный
       {
         new: true,
       }
     );
 
+    // ОК!
     res.json({
       message: `Пост ${postId} изменен`,
     });
   } catch (error) {
+    // Ошибка
     console.log(err);
     res.status(500).json({
       message: "Не удалось изменить статью",
