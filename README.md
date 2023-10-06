@@ -397,8 +397,17 @@ const register = async (req, res) => {
 - [x] Код аналогичен с регистрацией + есть комменты.
 
 ```javascript
-// АВТОРИЗАЦИЯ
-app.post("/auth/login", async (req, res) => {
+// login
+//  1) Роут для авторизации
+//  2) Валидация для авторизации (middleware)
+//  3) Вывод ошибки при валидации (middleware)
+//  4) Контроллер на регистрацию
+router.post("/auth/login", loginValidation, handleValidationErrors, UserController.login);
+```
+
+```javascript
+// АВТОРИЗАЦИЯ (контроллер)
+const login = async (req, res) => {
   try {
     // Сначала мы находим пользователя в БД по описаным параметрам
     // Используем модель UserModel и метод findOne() с параметром email
