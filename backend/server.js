@@ -1,5 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
+import cors from "cors";
 import multer from "multer";
 import "dotenv/config";
 import checkAuths from "./utils/checkAuths.js";
@@ -34,6 +35,7 @@ const upload = multer({ storage });
 // Читает/понимает JSON
 // Иначе JSON не читается (тот самый пустой объект undefined)
 app.use(express.json());
+app.use(cors());
 
 // Получение статических файлов сервера по по пути uploads
 // express.static("uploads") - говорим, чтобы сервер брал файлы отсюда
