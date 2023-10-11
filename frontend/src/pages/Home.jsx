@@ -5,7 +5,7 @@ import Grid from '@mui/material/Grid';
 
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchPosts } from '../redux/slices/posts';
+import { fetchPosts, fetchTags } from '../redux/slices/posts';
 
 import { Post } from '../components/Post';
 import { TagsBlock } from '../components/TagsBlock';
@@ -13,13 +13,16 @@ import { CommentsBlock } from '../components/CommentsBlock';
 
 export const Home = () => {
   const dispatch = useDispatch();
-  const {posts, tags} = useSelector(state => state)
+  const {posts, tags} = useSelector(state => state.posts)
 
   useEffect(() => {
     dispatch(fetchPosts())
+    dispatch(fetchTags())
   }, [])
 
-  console.log(posts.posts.status)
+  // Вариант получить true|false 
+  // Для отображения скилетона
+  const isTagsLoaded = tags.status === "loading"
 
   return (
     <>
@@ -29,9 +32,9 @@ export const Home = () => {
       </Tabs>
       <Grid container spacing={4}>
         <Grid xs={8} item>
-          {posts.posts.status === "loading" ? [...Array(5)].map((item, i) => <Post key={i} isLoading={true}/>) 
-          : posts.posts.status === "error" ? <div>Произошла ошибка</div> 
-          : posts.posts.items.map(item => {
+          {posts.status === "loading" ? [...Array(5)].map((item, i) => <Post key={i} isLoading={true}/>) 
+          : posts.status === "error" ? <div>Произошла ошибка</div> 
+          : posts.items.map(item => {
             return (
               <Post
                 id={item._id}
@@ -51,7 +54,7 @@ export const Home = () => {
           })}
         </Grid>
         <Grid xs={4} item>
-          <TagsBlock items={['react', 'typescript', 'заметки']} isLoading={false} />
+          <TagsBlock items={tags.items} isLoading={isTagsLoaded} />
           <CommentsBlock
             items={[
               {

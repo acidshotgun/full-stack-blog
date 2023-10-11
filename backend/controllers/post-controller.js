@@ -160,4 +160,23 @@ const update = async (req, res) => {
   }
 };
 
-export { create, getAll, getOne, remove, update };
+const getLastTags = async (req, res) => {
+  try {
+    const posts = await PostModel.find().limit(5).exec();
+
+    const tags = posts
+      .map((item) => item.tags)
+      .flat()
+      .slice(0, 5);
+
+    res.json(tags);
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: 400,
+      message: "Не удалось получить посты",
+    });
+  }
+};
+
+export { create, getAll, getOne, remove, update, getLastTags };

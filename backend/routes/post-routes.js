@@ -25,5 +25,6 @@ router.patch(
   handleValidationErrors,
   PostContoller.update
 );
+router.get("/tags", PostContoller.getLastTags);
 
 export default router;
