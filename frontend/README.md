@@ -9,14 +9,16 @@
 
 ```javascript
 root.render(
-  <React.StrictMode>
+  <>
     <CssBaseline />
     <ThemeProvider theme={theme}>
       <Router>
-        <App />
+        <Provider store={store}>
+          <App />
+        </Provider>
       </Router>
     </ThemeProvider>
-  </React.StrictMode>
+  </>
 );
 ``` 
 
