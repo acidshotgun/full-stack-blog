@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../services/axiosConfig";
 
 // Начальное состояние
 const initialState = {
@@ -17,13 +17,13 @@ const initialState = {
 // Обязательно export их отдельно
 // Асинк запрос за получение постов
 export const fetchPosts = createAsyncThunk("posts/fetchPosts", async () => {
-  const response = await axios.get("http://localhost:4444/posts");
+  const response = await axios.get("/posts");
   return response.data;
 });
 
 // Асинк запрос за получение тегов
 export const fetchTags = createAsyncThunk("tags/fetchTags", async () => {
-  const response = await axios.get("http://localhost:4444/tags");
+  const response = await axios.get("/tags");
   return response.data;
 });
 

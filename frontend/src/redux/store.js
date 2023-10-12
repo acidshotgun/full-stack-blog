@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 // Импорт reducers
 import { postReducer } from "./slices/posts";
+import { authReducer } from "./slices/auth";
 
 // store (хранилище)
 //  1) reducers
@@ -9,6 +10,7 @@ import { postReducer } from "./slices/posts";
 const store = configureStore({
   reducer: {
     posts: postReducer,
+    auth: authReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware(),
   devTools: process.env.NODE_ENV !== "production",

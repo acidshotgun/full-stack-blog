@@ -4,7 +4,7 @@ import { Post } from "../components/Post";
 import { Index } from "../components/AddComment";
 import { CommentsBlock } from "../components/CommentsBlock";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import axios from "../services/axiosConfig";
 
 export const FullPost = () => {
   // Для получения одного поста redux не нужен
@@ -22,7 +22,8 @@ export const FullPost = () => {
   //    2) Поставим загрузку в false
   //    3) Ошибка
   useEffect(() => {
-    axios.get(`http://localhost:4444/posts/${id}`)
+    axios
+      .get(`/posts/${id}`)
       .then(res => {
         setData(res.data)
         setIsLoading(false)
