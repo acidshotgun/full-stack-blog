@@ -7,12 +7,20 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 
 export const FullPost = () => {
+  // Для получения одного поста redux не нужен
+  // Используем просто useState, и получаем данные одного поста
   const [data, setData] = useState();
+  // Стейт загрузки, который будет выдавать скелетон, пока идет загрузка
   const [isLoading, setIsLoading] = useState(true);
 
   // Выттаскиваем id (поста) из url
   const {id} = useParams()
 
+  // При открытии useEffect() сделает запрос к посту по полученному id из url
+  // Получим промис и обработаем:
+  //    1) Поместим ответ (res.data) в стейт
+  //    2) Поставим загрузку в false
+  //    3) Ошибка
   useEffect(() => {
     axios.get(`http://localhost:4444/posts/${id}`)
       .then(res => {
@@ -24,10 +32,15 @@ export const FullPost = () => {
       })
   }, [])
 
+  // Пока isLoading стоит в true - будет отрисовать скелетон
+  // isLoading - пропс который принимает true \ false
+  // true = skeleton, false = данные
+  // Это логика прописана у компонента Post
   if (isLoading) {
     return <Post isLoading={isLoading}/>
   }
 
+  // Рендерим подставляя данные уже полученные и добавленные в стейт data
   return (
     <>
       <Post
