@@ -186,4 +186,6 @@ export default store;
 + При помощи хука `useSelector()` достаем из хранилища посты и тэги, которые нам нужны. (получаем к ним доступ из компонента).
 + Отрисовывается компонент на основе данных из `store`
 
+**[КОМПОНЕНТ Home - Все посты / Тэгт](https://github.com/acidshotgun/full-stack-blog/blob/master/frontend/src/pages/Home.jsx)**
+
 
