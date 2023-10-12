@@ -12,17 +12,27 @@ import { TagsBlock } from '../components/TagsBlock';
 import { CommentsBlock } from '../components/CommentsBlock';
 
 export const Home = () => {
+  // Достаем dispatch 
+  // И наши состояния из store (store => posts =>{ posts, tags })
   const dispatch = useDispatch();
   const {posts, tags} = useSelector(state => state.posts)
 
+  // При запуске с помощью dispatch 
+  // Отправляем async actions для получения постов и тэгов
+  // Достаем их выше
   useEffect(() => {
     dispatch(fetchPosts())
     dispatch(fetchTags())
   }, [])
 
   // Вариант получить true|false 
-  // Для отображения скилетона
-  const isTagsLoaded = tags.status === "loading"
+  // Для отображения скилетона у тэгов
+  // У компонента Post \ TagsBlock есть проп isLoading - если он true - будет скелетон
+  // Если false - рендерим пост с данными
+  // Т.е если условие ниже верно то = true. Напротив = false
+  // Оно и подставляется в компонент Post \ TagsBlock
+  const isTagsLoaded = tags.status === "loading";
+  const isPostsLoaded = posts.status === "loading";
 
   return (
     <>
@@ -32,8 +42,16 @@ export const Home = () => {
       </Tabs>
       <Grid container spacing={4}>
         <Grid xs={8} item>
-          {posts.status === "loading" ? [...Array(5)].map((item, i) => <Post key={i} isLoading={true}/>) 
+          {/* Рендерим посты */}
+          {/* Если posts.status = "loading" */}
+          {/* Отррендерим 5 Post при помощи массива undefined */}
+          {/* Где isLoading={false} - это отрендерит 5 скелетонов */}
+          {posts.status === "loading" ? [...Array(5)].map((item, i) => <Post key={i} isLoading={isPostsLoaded}/>) 
+          // Либо ошибка
           : posts.status === "error" ? <div>Произошла ошибка</div> 
+          // Когда посты загружены и posts.status = idle
+          // Мапим посты и отрисываем
+          // Компонент Posts уже isLoading={fasle} будет, что уберет скелетон и отрисует данные
           : posts.items.map(item => {
             return (
               <Post
@@ -54,6 +72,8 @@ export const Home = () => {
           })}
         </Grid>
         <Grid xs={4} item>
+          {/* Рендер тегов */}
+          {/* Аналогично как и посты */}
           <TagsBlock items={tags.items} isLoading={isTagsLoaded} />
           <CommentsBlock
             items={[
