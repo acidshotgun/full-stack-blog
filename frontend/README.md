@@ -178,14 +178,107 @@ export default store;
 
 <br>
 
-<h3>+ Получение постов. useSelector()</h3>
+<h3>+ Получение постов \ тэгов. useSelector()</h3>
 
 - [x] При загрузке главной страницы будем загружать все посты. При помощи `useEffect()` и `asyncActions`.
 
-+ Открываем главную и при помощи хука `useEffect()` и `dispatch` активируем `async actions`, который сделают запросы к серверу и полученные данные поместят в `store`. (Асинхронные экшены описаны в слайсе posts)
-+ При помощи хука `useSelector()` достаем из хранилища посты и тэги, которые нам нужны. (получаем к ним доступ из компонента).
-+ Отрисовывается компонент на основе данных из `store`
+- [x] Открываем главную и при помощи хука `useEffect()` и `dispatch` активируем `async actions`, который сделают запросы к серверу и полученные данные поместят в `store`. (Асинхронные экшены описаны в слайсе posts)
+- [x] При помощи хука `useSelector()` достаем из хранилища посты и тэги, которые нам нужны. (получаем к ним доступ из компонента).
+- [x] Отрисовывается компонент на основе данных из `store`
 
 **[КОМПОНЕНТ Home - Все посты / Тэгт](https://github.com/acidshotgun/full-stack-blog/blob/master/frontend/src/pages/Home.jsx)**
 
+<br>
 
+<h3>+ Получение одного поста \ комменты. useParams()</h3>
+
+- [x] Для получения одного поста открываем страницу по динамическому роуту, который прописан в компоненте `App - <Route path="/posts/:id" element={<FullPost />} />`, где подставляется `id` поста, по которому переходим.
+- [x] Хук `useParams` из react-router-dom получит данные о странице, а именно нужен переданный динамически `id`.
+- [x] По этому `id` делаем запрос и получаем данные который после записываются в `state`
+- [x] Отрисовываем компонент на основе полученных данных + скелетон
+
+**[КОМПОНЕНТ FullPost - Один пост / Комменты](https://github.com/acidshotgun/full-stack-blog/blob/master/frontend/src/pages/FullPost.jsx)**   
+
+<hr>
+<br>
+<br>
+
+# АВТОРИЗАЦИЯ
+
+- [x] На этом этапе нужно настроить форму авторизации + настроить запрос, который будет отправляться на сервер и возвращаться нам данные с `jwt-токеном`, который будет сообщать серверу при запросах, что пользователь авторизован и имеет доступ к функционалу. `jwt-токен` будет храниться в `local storage`.
+- [ ] 
+
+<br>
+
+<h3>+ Redux toolkit \ авторизация</h3>
+
+- [x] Когда пользователь будет логиниться в приложении - то из формы будет отправляться `post-запрос` на сервер. Ответ которого (как мы поним) содержит в себе объект пользователя `(тот самый user._doc)`, в котором будут все данные о пользователе из бд кроме его хэш пароля.
+- [x] Запрос будет отправлен при помощи `async action` и записан в хранилище. Для этого мы создали специально новый `slice - authSlice`. В это хранилище будет лежать информация об авторизированном пользователе, полученная в ответе на `post-запрос при логировании`.
+
++ Создание `authSlice`
+
+```javascript
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "../../services/axiosConfig";
+
+// Начальное состояние
+// изначально data пустая
+const initialState = {
+  data: null,
+  status: "idle",
+};
+
+// async action для пост запроса на логгирование.
+// Принимает в себя params с клиента - это объект из формы (formData)
+export const fetchUserData = createAsyncThunk(
+  "auth/fetchUserData",
+  async (params) => {
+    const response = await axios.post("/auth/login", params);
+    return response.data;
+  }
+);
+
+// slice логгирования
+// Обрабатывает extraReducers получения данных при пост запросе
+// записывает в state эти данные action.payload
+const authSlice = createSlice({
+  name: "auth",
+  initialState,
+  extraReducers: (builder) => {
+    builder.addCase(fetchUserData.pending, (state) => {
+      state.status = "loading";
+    });
+    builder.addCase(fetchUserData.fulfilled, (state, action) => {
+      state.status = "idle";
+      state.data = action.payload;
+    });
+    builder.addCase(fetchUserData.rejected, (state) => {
+      state.status = "error";
+      state.data = null;
+    });
+  },
+});
+
+const { actions, reducer } = authSlice;
+
+export const authReducer = reducer;
+
+```
+
++ Добавим этот слайс в стор
+
+```javascript
+const store = configureStore({
+  reducer: {
+    posts: postReducer,
+    auth: authReducer,
+  },
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware(),
+  devTools: process.env.NODE_ENV !== "production",
+});
+
+```
+
+<br>
+
+<h3>+ Форма \ авторизация</h3>
