@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../services/axiosConfig";
 
 // Начальное состояние
-// изначально data пустая
+// изначально data пустая + статус
 const initialState = {
   data: null,
   status: "idle",
@@ -10,6 +10,8 @@ const initialState = {
 
 // async action для пост запроса на логгирование.
 // Принимает в себя params с клиента - это объект из формы (formData)
+//  1)  email
+//  2)  password
 export const fetchAuth = createAsyncThunk("auth/fetchAuth", async (params) => {
   const response = await axios.post("/auth/login", params);
   return response.data;
@@ -21,17 +23,23 @@ export const fetchAuthMe = createAsyncThunk("auth/fetchAuthMe", async () => {
 });
 
 // slice логгирования
+//  (для хранения полученной с сервера ин-ф о пользователе + его токен)
+// reducers
 // Обрабатывает extraReducers получения данных при пост запросе
 // записывает в state эти данные
 const authSlice = createSlice({
   name: "auth",
   initialState,
+  // reducers logout (выход)
+  // При выходе нужно очистить global state с данными юзера и его токен
+  // Будет вешаться на кнопку выхода и через dispatch запускаться
   reducers: {
     logout: (state) => {
       state.data = null;
     },
   },
   extraReducers: (builder) => {
+    // Обработка async action логгировния
     builder.addCase(fetchAuth.pending, (state) => {
       state.status = "loading";
     });
@@ -44,6 +52,7 @@ const authSlice = createSlice({
       state.data = null;
     });
 
+    // Обработка async action на проверку авторизации
     builder.addCase(fetchAuthMe.pending, (state) => {
       state.status = "loading";
     });
