@@ -14,7 +14,8 @@ const request = axios.create({
 // Тут добавляем к нашему запросу перехватчик запросов (interceptors.request)
 //    1) Тут мы перехватываем запрос и добавляем к нему Authorization в headers
 // и помещяем туда token, который хранится в local storage
-// так при каждом запросе будет проверка - авторизирован пользователь чи нет
+// так при каждом запросе будет проверка - авторизирован пользователь чи нет (есть токен чи нет)
+//    2) Если сервер не получит токен в авторизации - будет ошибка (там где этот токен нужен)
 request.interceptors.request.use((config) => {
   config.headers.Authorization = window.localStorage.getItem("token");
   return config;

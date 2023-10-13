@@ -4,14 +4,16 @@ import TextField from "@mui/material/TextField";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 
-import { useDispatch } from "react-redux";
+import { Navigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
-import { fetchAuth } from "../../redux/slices/auth";
+import { fetchAuth, selectIsAuth } from "../../redux/slices/auth";
 
 import styles from "./Login.module.scss";
 
 export const Login = () => {
   const dispatch = useDispatch();
+  const isAuth = useSelector(selectIsAuth);
 
   const {
     register,
@@ -26,9 +28,22 @@ export const Login = () => {
     mode: "onChange",
   });
 
-  const onSubmit = (values) => {
-    dispatch(fetchAuth(values));
+  const onSubmit = async (values) => {
+    const data = await dispatch(fetchAuth(values));
+    console.log(data);
+
+    if (!data.payload) {
+      return alert("Не удалось авторизоваться");
+    }
+
+    if ("token" in data.payload) {
+      window.localStorage.setItem("token", data.payload.token);
+    }
   };
+
+  if (isAuth) {
+    return <Navigate to={"/"} />;
+  }
 
   return (
     <Paper classes={{ root: styles.root }}>
