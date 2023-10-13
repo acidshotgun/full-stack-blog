@@ -280,4 +280,3 @@ const store = configureStore({
 
 <br>
 
-<h3>+ Форма \ авторизация</h3>
