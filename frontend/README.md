@@ -205,23 +205,41 @@ export default store;
 
 # REDUX-TOOLKIT / АВТОРИЗАЦИЯ / РЕГИСТАРЦИЯ / ВЫХОД
 
-- [x] На этом этапе нужно настроить форму авторизации + настроить запрос, который будет отправляться на сервер и возвращаться нам данные с `jwt-токеном`, который будет сообщать серверу при запросах, что пользователь авторизован и имеет доступ к функционалу. `jwt-токен` будет сохраняться в `local storage`. 
+- [x] На этом этапе нужно настроить форму авторизации + настроить запрос, который будет отправляться на сервер и возвращаться нам данные с `jwt-токеном`, который будет сообщать серверу при запросах, что пользователь авторизован и имеет доступ к функционалу. `jwt-токен` будет сохраняться в `local storage`.
+- [x] Т.Е. в кратце логика такая:
+
++ Юзер регается / авторизуется (посылается post-запрос) и с серва возвращается ин-фа + токен. Эта логика обрабатывается в `authSlice`.
 
 <br>
 
-<h3>+ Redux toolkit \ авторизация + logout</h3>
++ Полученные данные записываются в `state` + в `local storage` помещается токен.
+  
+<br>
 
-- [x] Когда пользователь будет логиниться в приложении - то из формы будет отправляться `post-запрос` на сервер. Ответ которого (как мы поним) содержит в себе объект пользователя `(тот самый user._doc)`, в котором будут все данные о пользователе из бд кроме его хэш пароля.
-- [x] Запрос будет отправлен при помощи `async action` и записан в хранилище. Для этого мы создали специально новый `slice - authSlice`. В это хранилище будет лежать информация об авторизированном пользователе, полученная в ответе на `post-запрос при логировании`.
++ Чтобы при обновлении страницы `state` не очищался - мы имеем запрос для проверки авторизации. Он будет отправляться каждый раз, при обновлии страницы. Это обеспечивается при помощи хука `useEffect()`, который всегда будет срабатывать на самом верхнем уровне в компоненте `App.js`.
 
-+ Создание `authSlice`
+<br>
+
++ В `App.js` хук `useEffect()` каждый раз делает запрос, на сервер и повторяет логику авторизации, т.е. получает с сервера данные о пользователе, которые помещаются в `state` (но в этом случае без токена, тк он итак лежит в `local storage`). + Этот запрос отправляется вместе с токеном, чтобы сервер видел, что юзер авторизован.
+
+<br>
+  
++ Чтобы запрос на сервер отправлялся с токеном в `headers.Authorization` - в каждый `axios-запрос` будет вшиваться этот токен. Если он есть - то ОК, если его нет - пользователь не авторизован.
+
+<br>
+
++ Эта логика позволит пользователю быть авторизованным, не перезаходить в приложение, видеть контент для зарегестрированных пользователей.
+
+<br>
+
+- [x] Создадим `authSlice`, в котором описана логика по оплучению данных о пользователе + токен с сервера и помещение их в глобальный стейт.
 
 ```javascript
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../services/axiosConfig";
 
 // Начальное состояние
-// изначально data пустая
+// изначально data пустая + статус
 const initialState = {
   data: null,
   status: "idle",
@@ -229,54 +247,102 @@ const initialState = {
 
 // async action для пост запроса на логгирование.
 // Принимает в себя params с клиента - это объект из формы (formData)
-export const fetchUserData = createAsyncThunk(
-  "auth/fetchUserData",
-  async (params) => {
-    const response = await axios.post("/auth/login", params);
-    return response.data;
-  }
-);
+//  1)  email
+//  2)  password
+// Запрос возвращает данные + токен = помещаем с глобал стейт
+export const fetchAuth = createAsyncThunk("auth/fetchAuth", async (params) => {
+  const response = await axios.post("/auth/login", params);
+  return response.data;
+});
+
+// async action для проверки авторизации
+// Этот запрос будет отправляться в App.js хуком useEffect()
+//    В каждый запрос мы вшиваем токен из loacl storage
+//    Если он есть, то запрос вернет данные о пользователе 
+//    и поместит сюда в стейт по аналогии с логгированием
+//    Только это нужно, чтобы пользователь не заходил заново при обновлении страницы.
+//    Если выйти из приложения то токен удалиться и этот запрос не будет ничего возвращать
+//          до тех пор, пока снова не авторизуемся.
+export const fetchAuthMe = createAsyncThunk("auth/fetchAuthMe", async () => {
+  const response = await axios.get("/auth/me");
+  return response.data;
+});
 
 // slice логгирования
+//  (для хранения полученной с сервера ин-ф о пользователе + его токен)
+// reducers
 // Обрабатывает extraReducers получения данных при пост запросе
-// записывает в state эти данные action.payload
+// записывает в state эти данные
 const authSlice = createSlice({
   name: "auth",
   initialState,
+  // reducers logout (выход)
+  // При выходе нужно очистить global state с данными юзера и его токен
+  // Будет вешаться на кнопку выхода и через dispatch запускаться
+  reducers: {
+    // reducer - очищает стейт
+    // Логика выхода из аккаунта
+    // + в компоненте отдельно удаляем токен из loacl storage
+    logout: (state) => {
+      state.data = null;
+    },
+  },
   extraReducers: (builder) => {
-    builder.addCase(fetchUserData.pending, (state) => {
+    // Обработка async action логгировния
+    // Помещает данные о пользователе в стейт
+    builder.addCase(fetchAuth.pending, (state) => {
       state.status = "loading";
     });
-    builder.addCase(fetchUserData.fulfilled, (state, action) => {
+    builder.addCase(fetchAuth.fulfilled, (state, action) => {
       state.status = "idle";
       state.data = action.payload;
     });
-    builder.addCase(fetchUserData.rejected, (state) => {
+    builder.addCase(fetchAuth.rejected, (state) => {
+      state.status = "error";
+      state.data = null;
+    });
+
+    // Обработка async action на проверку авторизации
+    // Аналогично помещает данные о пользователе в стейт
+    builder.addCase(fetchAuthMe.pending, (state) => {
+      state.status = "loading";
+    });
+    builder.addCase(fetchAuthMe.fulfilled, (state, action) => {
+      state.status = "idle";
+      state.data = action.payload;
+    });
+    builder.addCase(fetchAuthMe.rejected, (state) => {
       state.status = "error";
       state.data = null;
     });
   },
 });
 
+// То, что возвращает слайс
 const { actions, reducer } = authSlice;
 
+// Эта переменная сообщает, что в стейте есть данные о пользователе
+// Есть - true | нет - false
+// Нужна, для отрисовки нужных данных если пользователь авторизован или нет
+export const selectIsAuth = (state) => Boolean(state.auth.data);
+
+// Редюсер, помещаемы в store
 export const authReducer = reducer;
-
-```
-
-+ Добавим этот слайс в стор
-
-```javascript
-const store = configureStore({
-  reducer: {
-    posts: postReducer,
-    auth: authReducer,
-  },
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware(),
-  devTools: process.env.NODE_ENV !== "production",
-});
-
+// Это action, для очистки стейта
+//  (выход из аккаунта)
+export const { logout } = actions;
 ```
 
 <br>
+
+<h3>+ Авторизация</h3>
+
+
+
+
+
+
+
+
+
 
