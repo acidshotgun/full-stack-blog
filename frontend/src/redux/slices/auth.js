@@ -12,11 +12,20 @@ const initialState = {
 // Принимает в себя params с клиента - это объект из формы (formData)
 //  1)  email
 //  2)  password
+// Запрос возвращает данные + токен = помещаем с глобал стейт
 export const fetchAuth = createAsyncThunk("auth/fetchAuth", async (params) => {
   const response = await axios.post("/auth/login", params);
   return response.data;
 });
 
+// async action для проверки авторизации
+// Этот запрос будет отправляться в App.js хуком useEffect()
+//    В каждый запрос мы вшиваем токен из loacl storage
+//    Если он есть, то запрос вернет данные о пользователе
+//    и поместит сюда в стейт по аналогии с логгированием
+//    Только это нужно, чтобы пользователь не заходил заново при обновлении страницы.
+//    Если выйти из приложения то токен удалиться и этот запрос не будет ничего возвращать
+//          до тех пор, пока снова не авторизуемся.
 export const fetchAuthMe = createAsyncThunk("auth/fetchAuthMe", async () => {
   const response = await axios.get("/auth/me");
   return response.data;
@@ -34,12 +43,16 @@ const authSlice = createSlice({
   // При выходе нужно очистить global state с данными юзера и его токен
   // Будет вешаться на кнопку выхода и через dispatch запускаться
   reducers: {
+    // reducer - очищает стейт
+    // Логика выхода из аккаунта
+    // + в компоненте отдельно удаляем токен из loacl storage
     logout: (state) => {
       state.data = null;
     },
   },
   extraReducers: (builder) => {
     // Обработка async action логгировния
+    // Помещает данные о пользователе в стейт
     builder.addCase(fetchAuth.pending, (state) => {
       state.status = "loading";
     });
@@ -53,6 +66,7 @@ const authSlice = createSlice({
     });
 
     // Обработка async action на проверку авторизации
+    // Аналогично помещает данные о пользователе в стейт
     builder.addCase(fetchAuthMe.pending, (state) => {
       state.status = "loading";
     });
@@ -67,9 +81,16 @@ const authSlice = createSlice({
   },
 });
 
+// То, что возвращает слайс
 const { actions, reducer } = authSlice;
 
+// Эта переменная сообщает, что в стейте есть данные о пользователе
+// Есть - true | нет - false
+// Нужна, для отрисовки нужных данных если пользователь авторизован или нет
 export const selectIsAuth = (state) => Boolean(state.auth.data);
 
+// Редюсер, помещаемы в store
 export const authReducer = reducer;
+// Это action, для очистки стейта
+//  (выход из аккаунта)
 export const { logout } = actions;

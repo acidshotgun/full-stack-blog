@@ -28,6 +28,7 @@ export const Login = () => {
     mode: "onChange",
   });
 
+  // Логгирование
   const onSubmit = async (values) => {
     const data = await dispatch(fetchAuth(values));
     console.log(data);
