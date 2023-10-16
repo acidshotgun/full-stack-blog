@@ -35,8 +35,8 @@ const register = async (req, res) => {
     res.json({ ...userData, token });
   } catch (error) {
     console.log(error);
-    res.status(400).json({
-      status: 400,
+    res.status(500).json({
+      status: 500,
       message: "Не удалось зарегистрироваться",
     });
   }
@@ -96,11 +96,11 @@ const auth = async (req, res) => {
 
     const { passwordHash, ...userData } = user._doc;
 
-    res.json({ ...userData });
+    res.json({ userData });
   } catch (error) {
     console.log(error);
-    res.status(400).json({
-      status: 400,
+    res.status(500).json({
+      status: 500,
       message: "Нет доступа",
     });
   }

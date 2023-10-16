@@ -29,19 +29,26 @@ export const Login = () => {
   });
 
   // Логгирование
+  // Форма отправляет введенные данные на серве, где они проверяются
+  // В dispatch вызываем async action для логгирования.
   const onSubmit = async (values) => {
     const data = await dispatch(fetchAuth(values));
     console.log(data);
 
+    // dispatch всегда возвращает информацию о выполненом действии
+    // Там содержится и payload (то что ), если все ОК
+    // Если НЕ ОК - то это ошибка - не удалось
     if (!data.payload) {
       return alert("Не удалось авторизоваться");
     }
 
+    // Если есть токен в data.payload, то мы поместим его в local storage
     if ("token" in data.payload) {
       window.localStorage.setItem("token", data.payload.token);
     }
   };
 
+  // Перенаправляем пользователя на главную.
   if (isAuth) {
     return <Navigate to={"/"} />;
   }

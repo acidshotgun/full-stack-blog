@@ -11,6 +11,8 @@ function App() {
   const dispatch = useDispatch();
   const isAuth = useSelector(selectIsAuth);
 
+  // Посылаем запрос проверки авторизации
+  // Чтобы не выкидывало из приложения
   useEffect(() => {
     dispatch(fetchAuthMe());
   }, []);

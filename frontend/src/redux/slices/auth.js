@@ -31,6 +31,17 @@ export const fetchAuthMe = createAsyncThunk("auth/fetchAuthMe", async () => {
   return response.data;
 });
 
+// async action для геристрации пользователя
+// Аналогично с авторизацией, только по другому роуту
+// Так же будет записывать данные в стейт при успешной регистрации
+export const fetchRegister = createAsyncThunk(
+  "auth/fetchRegister",
+  async (params) => {
+    const response = await axios.post("/auth/register", params);
+    return response.data;
+  }
+);
+
 // slice логгирования
 //  (для хранения полученной с сервера ин-ф о пользователе + его токен)
 // reducers
@@ -75,6 +86,20 @@ const authSlice = createSlice({
       state.data = action.payload;
     });
     builder.addCase(fetchAuthMe.rejected, (state) => {
+      state.status = "error";
+      state.data = null;
+    });
+
+    // Обработка async action на регистраци.
+    // Аналогично помещает данные о пользователе в стейт
+    builder.addCase(fetchRegister.pending, (state) => {
+      state.status = "loading";
+    });
+    builder.addCase(fetchRegister.fulfilled, (state, action) => {
+      state.status = "idle";
+      state.data = action.payload;
+    });
+    builder.addCase(fetchRegister.rejected, (state) => {
       state.status = "error";
       state.data = null;
     });
