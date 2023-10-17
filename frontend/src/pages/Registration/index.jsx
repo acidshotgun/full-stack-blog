@@ -31,6 +31,12 @@ export const Registration = () => {
     mode: "onChange",
   });
 
+  // Аналогичный запрос как и при авторизации
+  // Данные с формы отправляются на сервер
+  // На сервере создается модель и создается юзер в БД
+  // Возвращаютя данные + токен
+  // Если данные + токен есть = моещаем в стейт
+  // + токен в local storage
   const onSubmit = async (values) => {
     const data = await dispatch(fetchRegister(values));
     console.log(data);
@@ -45,6 +51,9 @@ export const Registration = () => {
   };
 
   // Перенаправляем пользователя на главную.
+  // Та же переменная из слайса = selectIsAuth
+  // Когда она будет true - значит все ок и данные вернулись и поместились в стейт
+  // Перенаправим пользователя на главную
   if (isAuth) {
     return <Navigate to={"/"} />;
   }

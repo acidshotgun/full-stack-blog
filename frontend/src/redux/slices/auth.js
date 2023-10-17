@@ -34,6 +34,7 @@ export const fetchAuthMe = createAsyncThunk("auth/fetchAuthMe", async () => {
 // async action для геристрации пользователя
 // Аналогично с авторизацией, только по другому роуту
 // Так же будет записывать данные в стейт при успешной регистрации
+// (АНАЛОГИЧНО)
 export const fetchRegister = createAsyncThunk(
   "auth/fetchRegister",
   async (params) => {
