@@ -268,6 +268,18 @@ export const fetchAuthMe = createAsyncThunk("auth/fetchAuthMe", async () => {
   return response.data;
 });
 
+// async action для геристрации пользователя
+// Аналогично с авторизацией, только по другому роуту
+// Так же будет записывать данные в стейт при успешной регистрации
+// (АНАЛОГИЧНО)
+export const fetchRegister = createAsyncThunk(
+  "auth/fetchRegister",
+  async (params) => {
+    const response = await axios.post("/auth/register", params);
+    return response.data;
+  }
+);
+
 // slice логгирования
 //  (для хранения полученной с сервера ин-ф о пользователе + его токен)
 // reducers
@@ -312,6 +324,20 @@ const authSlice = createSlice({
       state.data = action.payload;
     });
     builder.addCase(fetchAuthMe.rejected, (state) => {
+      state.status = "error";
+      state.data = null;
+    });
+
+    // Обработка async action на регистраци.
+    // Аналогично помещает данные о пользователе в стейт
+    builder.addCase(fetchRegister.pending, (state) => {
+      state.status = "loading";
+    });
+    builder.addCase(fetchRegister.fulfilled, (state, action) => {
+      state.status = "idle";
+      state.data = action.payload;
+    });
+    builder.addCase(fetchRegister.rejected, (state) => {
       state.status = "error";
       state.data = null;
     });
@@ -469,6 +495,60 @@ function App() {
 
 <br>   
 
-- [x] Запрос делается так же при помощи `async action`, поэтому получаемые данные (+ токен) помещаются в глобал стейт.
-- [x] В случае ошибок / ошибок валидаций - сервер вернет соответствующее сообщение.
+- [x] Запрос делается так же при помощи `async action`, поэтому получаемые данные (+ токен) помещаются в глобал стейт `(из action payload)`.
+- [x] В случае ошибок / ошибок валидаций - сервер вернет соответствующее сообщение с ошибкой.
 
++ Компонент использует хук `useForm()` + код ниже
+
+**[КОМПОНЕНТ РЕГИСТРАЦИИ](https://github.com/acidshotgun/full-stack-blog/blob/master/frontend/src/pages/Registration/index.jsx)**
+
+<br>
+
+<h3>+ Logout / Выход из аккаунта</h3>
+
+- [x] Выход из аккаунта - проще простого.
+- [x] Задача - очистить стейт, чтобы контент, который будет отрисоваваться был для незарегистрированного юзера
+- [x] + Удалить токен из `local storage`.
+
++ В слайсе умеется reducer `logout`, который и будет очищать стейт.
+
+```javascript
+  reducers: {
+    // reducer - очищает стейт
+    // Логика выхода из аккаунта
+    // + в компоненте отдельно удаляем токен из loacl storage
+    logout: (state) => {
+      state.data = null;
+    },
+
+// + НЕ ЗАБЫВАЕМ ЕГО ДОСТАТЬ
+// ЧТОБЫ ИСПОЛЬЗОВАТЬ ИЗ ВНЕ
+
+// То, что возвращает слайс
+const { actions, reducer } = authSlice;
+
+// Это action, для очистки стейта
+//  (выход из аккаунта)
+export const { logout } = actions;
+  },
+```  
+
+<br>
+
++ В копмоненте `header` создаем метод для выхода. По нажатию кнопки будет очищаться стейт + удаляется токен из хранилища
++ Стейт пустой = `selectIsAuth` в слайсе пустой = интерфейс будет отрисован как для незарегистрированного пользователя.
+
+```javascript
+  const dispatch = useDispatch();
+  const isAuth = useSelector(selectIsAuth);
+
+  // Выход из аккаунта
+  //  1) Вызываем reducer для очистки стейта
+  //  2) Удаляем токен из local storage
+  const onClickLogout = () => {
+    if (window.confirm("Вы хотете выйти?")) {
+      dispatch(logout());
+      window.localStorage.removeItem("token");
+    }
+  };
+```
