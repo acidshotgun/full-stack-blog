@@ -552,3 +552,48 @@ export const { logout } = actions;
     }
   };
 ```
+
+<hr>
+<br>
+<br>
+
+# УДАЛЕНИЕ ПОСТА ТОЛЬКО ЗАРЕГИСТРИРОВАННОМУ ЮЗЕРУ!!!
+
+- [x] Пользователь может изменять / удалять только свои посты.
+- [x] Логика:
+
++ При наведении на пост появляется плашка где можно изменить / удалить пост. Эту плашку должен видеть только автор поста (если он авторизован). Нужно чтобы приложение знало, что это его пост.
++ У компонента `Post` есть проп `isEditable`, принимающий true / false. Этот проп отвечает за отрисовку той самой плашки.
++ Необходимо достать `_id` юзера и `_id` поста и сравнить их. Если равны (true) - плашка отрисовывается и наобород.
++ Создадим переменную `userData` в компоненте `Home` и поместим в нее данные юзера из глобал стейта и затем сравним их при отрисовке компонентов `Post`
+
+```javascript
+export const Home = () => {
+// ПОлучаем данные о пользователе из стейта
+  const userData = useSelector((state) => state.auth.data);
+// Данные о постах из стейта для отрисовки + тэги
+  const { posts, tags } = useSelector((state) => state.posts);
+
+  return (
+// Перебираем посты и отрисовываем их
+   posts.items.map((item) => {
+    return (
+      <Post
+        id={item._id}
+        title={item.title}
+        imageUrl={item.imageUrl}
+        user={{
+          avatarUrl: item.user.avatarUrl,
+          fullName: item.user.fullName,
+        }}
+        createdAt={item.createdAt}
+        viewsCount={item.viewsCount}
+        commentsCount={3}
+        tags={item.tags}
+  // Пропс isEditable, который отвечает за отрисовку плашки редактирования
+  // Принимает результат сравнения true / false
+        isEditable={userData?._id === item.user._id}
+      />
+    );
+  })
+```  
