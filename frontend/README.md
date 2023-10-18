@@ -1,4 +1,4 @@
-# FRONTEND
+![image](https://github.com/acidshotgun/full-stack-blog/assets/117285472/ed6f8f1b-3d86-47cf-8f7a-0618f93150bb)# FRONTEND
 
 <h2>ROUTES</h2>
 
@@ -662,3 +662,25 @@ export const Home = () => {
 <br>
 
 <h3>+ Загрузки картинки на сервак</h3>
+
+# ЗАДАЧИ:
+
+- [x] ПОВТОР КОДА
+- [x] ПОДРОБНЕЕ ПРО СТРОЧКУ где есть пропс `isEditable` тк там мы сначала имеем null и потом уже получаем данные о юзере. И если рендерить рсазу то null так и остается, а если ставить ? то обновленный стейт и будет ререндерить проп
+
+```javascript
+                <Post
+                  id={item._id}
+                  title={item.title}
+                  imageUrl={item.imageUrl}
+                  user={{
+                    avatarUrl: item.user.avatarUrl,
+                    fullName: item.user.fullName,
+                  }}
+                  createdAt={item.createdAt}
+                  viewsCount={item.viewsCount}
+                  commentsCount={3}
+                  tags={item.tags}
+                  isEditable={userData?.userData?._id === item.user._id}
+                />
+```
