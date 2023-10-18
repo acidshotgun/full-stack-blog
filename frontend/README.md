@@ -487,6 +487,38 @@ function App() {
 
 <br>
 
+- [x] И в зависимости от авторизации будем отрисовывать разные кнопки в хедере. Для этого проверяем есть ли токен в `local storage` и есть ли данные в стейте `isAuth`.
+
+```javascript
+          <div className={styles.buttons}>
+            {window.localStorage.getItem("token") || isAuth ? (
+              <>
+                <Link to="/add-post">
+                  <Button variant="contained">Написать статью</Button>
+                </Link>
+                <Button
+                  onClick={onClickLogout}
+                  variant="contained"
+                  color="error"
+                >
+                  Выйти
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="outlined">Войти</Button>
+                </Link>
+                <Link to="/register">
+                  <Button variant="contained">Создать аккаунт</Button>
+                </Link>
+              </>
+            )}
+          </div>
+```
+
+<br>
+
 <h3>+ Регистрация / Создание юзера</h3>
 
 - [x] Логика регистрации такая же как и при логгировании.
@@ -591,8 +623,8 @@ export const Home = () => {
         commentsCount={3}
         tags={item.tags}
   // Пропс isEditable, который отвечает за отрисовку плашки редактирования
-  // Принимает результат сравнения true / false
-        isEditable={userData?._id === item.user._id}
+  // Принимает результат сравнения true / false (id юзера из стейта и id юзера в авторе поста)
+        isEditable={userData?.userData._id === item.user._id}
       />
     );
   })
@@ -603,3 +635,24 @@ export const Home = () => {
 <br>
 
 # СОЗДАНИЕ СТАТЬИ
+
+<br>
+
+<h3>+ Не авторизован - не можешь</h3>
+
+- [x] Неавторизованный юзер может перейти по ссылке и попасть на форму создания поста. Если он не авторизован - используем компонент `<Navigate />` из `react-router-dom`, который уже использовали и перенаправляем на форму регистрации. Это в компоненте `Add-post`
+
+```javascript
+  // Если юзер не авторизован - направляем на регистрацию
+  // Чтобы не зашел по этому роуту если он не авторизован
+  // Через isAuth, проверяем если данные в стейте (авторизован ли)
+  if (!isAuth) {
+    return <Navigate to={"/register"} />;
+  }
+```
+
+<br>
+
+<h3>+ Создание статьи</h3>
+
+- [x] Для создания статьи используется библиотека `react-simplemde-editor`. Это библиотека, которая позволяет создавать посты как в гитхаб с разными разметками.
