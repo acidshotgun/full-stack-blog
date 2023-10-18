@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 import { Post } from "../components/Post";
 import { Index } from "../components/AddComment";
@@ -14,7 +15,7 @@ export const FullPost = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Выттаскиваем id (поста) из url
-  const {id} = useParams()
+  const { id } = useParams();
 
   // При открытии useEffect() сделает запрос к посту по полученному id из url
   // Получим промис и обработаем:
@@ -24,21 +25,21 @@ export const FullPost = () => {
   useEffect(() => {
     axios
       .get(`/posts/${id}`)
-      .then(res => {
-        setData(res.data)
-        setIsLoading(false)
+      .then((res) => {
+        setData(res.data);
+        setIsLoading(false);
       })
       .catch((error) => {
-        console.log(error)
-      })
-  }, [])
+        console.log(error);
+      });
+  }, []);
 
   // Пока isLoading стоит в true - будет отрисовать скелетон
   // isLoading - пропс который принимает true \ false
   // true = skeleton, false = данные
   // Это логика прописана у компонента Post
   if (isLoading) {
-    return <Post isLoading={isLoading}/>
+    return <Post isLoading={isLoading} />;
   }
 
   // Рендерим подставляя данные уже полученные и добавленные в стейт data
@@ -58,7 +59,7 @@ export const FullPost = () => {
         tags={data.tags}
         isFullPost
       >
-        <p>{data.text}</p>
+        <ReactMarkdown children={data.text} />
       </Post>
       <CommentsBlock
         items={[

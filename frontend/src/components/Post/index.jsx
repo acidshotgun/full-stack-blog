@@ -1,15 +1,16 @@
-import React from 'react';
-import clsx from 'clsx';
-import { Link } from 'react-router-dom';
-import IconButton from '@mui/material/IconButton';
-import DeleteIcon from '@mui/icons-material/Clear';
-import EditIcon from '@mui/icons-material/Edit';
-import EyeIcon from '@mui/icons-material/RemoveRedEyeOutlined';
-import CommentIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
+import React from "react";
+import clsx from "clsx";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import IconButton from "@mui/material/IconButton";
+import DeleteIcon from "@mui/icons-material/Clear";
+import EditIcon from "@mui/icons-material/Edit";
+import EyeIcon from "@mui/icons-material/RemoveRedEyeOutlined";
+import CommentIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
 
-import styles from './Post.module.scss';
-import { UserInfo } from '../UserInfo';
-import { PostSkeleton } from './Skeleton';
+import styles from "./Post.module.scss";
+import { UserInfo } from "../UserInfo";
+import { PostSkeleton } from "./Skeleton";
 
 export const Post = ({
   id,
@@ -28,6 +29,8 @@ export const Post = ({
   if (isLoading) {
     return <PostSkeleton />;
   }
+
+  console.log(isEditable);
 
   const onClickRemove = () => {};
 
@@ -48,14 +51,16 @@ export const Post = ({
       {imageUrl && (
         <img
           className={clsx(styles.image, { [styles.imageFull]: isFullPost })}
-          src={imageUrl}
+          src={`http://localhost:4444${imageUrl}`}
           alt={title}
         />
       )}
       <div className={styles.wrapper}>
         <UserInfo {...user} additionalText={createdAt} />
         <div className={styles.indention}>
-          <h2 className={clsx(styles.title, { [styles.titleFull]: isFullPost })}>
+          <h2
+            className={clsx(styles.title, { [styles.titleFull]: isFullPost })}
+          >
             {isFullPost ? title : <Link to={`/posts/${id}`}>{title}</Link>}
           </h2>
           <ul className={styles.tags}>

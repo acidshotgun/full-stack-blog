@@ -12,6 +12,9 @@ export const Header = () => {
   const dispatch = useDispatch();
   const isAuth = useSelector(selectIsAuth);
 
+  // Выход из аккаунта
+  //  1) Вызываем reducer для очистки стейта
+  //  2) Удаляем токен из local storage
   const onClickLogout = () => {
     if (window.confirm("Вы хотете выйти?")) {
       dispatch(logout());
@@ -24,12 +27,13 @@ export const Header = () => {
       <Container maxWidth="lg">
         <div className={styles.inner}>
           <Link className={styles.logo} to="/">
-            <div>ARCHAKOV BLOG</div>
+            <div>ACIDSHOTGUN</div>
           </Link>
           <div className={styles.buttons}>
-            {isAuth ? (
+            {/* Есть токен или isAuth = отрисовка контента в зависимости от авторизации */}
+            {window.localStorage.getItem("token") || isAuth ? (
               <>
-                <Link to="/posts/create">
+                <Link to="/add-post">
                   <Button variant="contained">Написать статью</Button>
                 </Link>
                 <Button
