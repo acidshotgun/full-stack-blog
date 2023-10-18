@@ -491,6 +491,7 @@ function App() {
 
 ```javascript
           <div className={styles.buttons}>
+      {/* Есть токен или isAuth = отрисовка контента в зависимости от авторизации */}
             {window.localStorage.getItem("token") || isAuth ? (
               <>
                 <Link to="/add-post">
