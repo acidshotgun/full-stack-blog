@@ -777,6 +777,11 @@ const onSubmit = async () => {
 };
 ```
 
+<hr>
+<br>
+<br>
+
+# УДАЛЕНИЕ СТАТЬИ
 
 
 
