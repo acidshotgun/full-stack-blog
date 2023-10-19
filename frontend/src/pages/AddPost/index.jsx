@@ -14,15 +14,41 @@ import "easymde/dist/easymde.min.css";
 import styles from "./AddPost.module.scss";
 
 export const AddPost = () => {
+  //  Стейты:
+  //    1) navigate - из хука useNavigate() react-router-dom
+  //  перенаправляет на опр. роут
   const navigate = useNavigate();
+  //    2) Так же проверка есть ли юзер в стейте (авторизован ли)
+  //  Перенаправим на регистрацию если не зареган
   const isAuth = useSelector(selectIsAuth);
+  //    3) Стейт загрузки - хз зачем, он не нужен
   const [loading, setLoading] = useState(false);
+  //    4) Стейт ссылки на кртинку на сервере
+  //  Когда загрузим она отрисуется для предпросмотка
   const [imageUrl, setImageUrl] = useState("");
+  //    5) Текст введенный в статье
   const [text, setText] = React.useState("");
+  //    6) Заголовок
   const [title, setTitle] = useState("");
+  //    7) Тэги
   const [tags, setTags] = useState("");
+  //    8) Ref, чтобы перенаправить нажатие.
+  //  Нажмем на кнопку, а нажмется элемент input чтоб картинку выбрать
+  //  Настроится ниже
   const inputFileRef = useRef();
 
+  // Тут картинка сразу грузится на сервер и с сервера отображается
+  // WARNING!!!
+  // Можно не грузить на серв а просто сделать предпросмотр при пом. HTML
+  // А грузится на серв картинка будет при submit формы
+  // А с серва она уже идет дальше куда надо (в облако например)
+
+  //  1) Создается FormData
+  //  2) Получаем файл картинки из event.target.files[0]
+  //  3) Добавляем этот файл в форму
+  //  4) Отправляем форму с картинкой на сервер и возвращаем ответ в переменную
+  //  5) url из data помещаем в стейт imageUrl - это ссылка на картинку
+  //  6) Обработка ошибки
   const handleChangeFile = async (event) => {
     try {
       const formData = new FormData();
@@ -36,7 +62,8 @@ export const AddPost = () => {
     }
   };
 
-  const onClickRemoveImage = () => {
+  // Очистить стейт с картинкой если передумали.
+  const onClickRemoveImage = async () => {
     if (window.confirm("Удалить изображение?")) {
       setImageUrl("");
     }
@@ -50,27 +77,33 @@ export const AddPost = () => {
     setText(value);
   }, []);
 
+  // Отправка статьи на сервер
   const onSubmit = async () => {
     try {
+      // Загрузка - хз зачем !
       setLoading(true);
 
+      // Собираем статью по полям (из стейтов)
       const fields = {
         title,
         imageUrl,
+        // Из строки тегов делаем массив
         tags: tags.split(","),
         text,
       };
 
-      console.log(fields);
-
+      // Достаем data из ответа когда послали статью на серв
       const { data } = await axios.post("/posts", fields);
 
-      console.log(data);
-
+      // Достаем _id из ответа (это _id статьи)
+      //  (Можно указать доп проверки на всякий случай)
       const id = data._id;
 
+      // Если _id есть то перенаправляем пользователя
+      // На страницу с этим постом созданным
       navigate(`/posts/${id}`);
     } catch (error) {
+      // Ошибка
       console.log(error);
     }
   };
