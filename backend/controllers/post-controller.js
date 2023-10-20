@@ -134,7 +134,7 @@ const update = async (req, res) => {
 
     // Найти по id => обновить
     await PostModel.findByIdAndUpdate(
-      // id gjcnf
+      // id поста
       postId,
       {
         // Что обновить и на что

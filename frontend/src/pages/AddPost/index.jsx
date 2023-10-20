@@ -1,11 +1,11 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import TextField from "@mui/material/TextField";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import SimpleMDE from "react-simplemde-editor";
 
 import { useSelector } from "react-redux";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, useParams } from "react-router-dom";
 
 import { selectIsAuth } from "../../redux/slices/auth";
 import axios from "../../services/axiosConfig";
@@ -36,6 +36,36 @@ export const AddPost = () => {
   //  Нажмем на кнопку, а нажмется элемент input чтоб картинку выбрать
   //  Настроится ниже
   const inputFileRef = useRef();
+
+  // Компонент для создания и изменения один и тот же
+  // Нам нужен id, чтобы приложение понимало - это создание или редактирование
+  // Логика в следю useEffect()
+  const { id } = useParams();
+
+  // Если id есть = true либо false
+  // Для смены кнопки опубликовать / сохранить
+  // + для отправки post или patch запроса
+  const isEditing = Boolean(id);
+
+  // Если мы получили id или не получили:
+  //    да - делаем запрос и заполняем поля данными поста, это редактирование
+  //    нет - поля создания не заполнены, это создание поста
+  useEffect(() => {
+    if (id) {
+      axios
+        .get(`/posts/${id}`)
+        .then((res) => {
+          setImageUrl(res.data.imageUrl);
+          setTitle(res.data.title);
+          setText(res.data.text);
+          setTags(res.data.tags.join(","));
+        })
+        .catch((error) => {
+          console.log(error);
+          alert("Не удалось загрузить пост");
+        });
+    }
+  }, []);
 
   // Тут картинка сразу грузится на сервер и с сервера отображается
   // WARNING!!!
@@ -93,15 +123,27 @@ export const AddPost = () => {
       };
 
       // Достаем data из ответа когда послали статью на серв
-      const { data } = await axios.post("/posts", fields);
+      // Запрос в зависимости от того создание это или обновление
+      // Проверяем через isEditing
+      const { data } = isEditing
+        ? await axios.patch(`/posts/${id}`, fields)
+        : await axios.post("/posts", fields);
+
+      console.log(data);
 
       // Достаем _id из ответа (это _id статьи)
       //  (Можно указать доп проверки на всякий случай)
-      const id = data._id;
+      // Типа если статья создана то мы должны получить _id
+      // Тк его возвращает сервер вместе с данными о посте
+
+      // Если это изменение статьи, _id - это будет id страницы из useParams
+      // Если это создание поста, то _id - это data._id из ответа
+      // тк изменение возвращает просто сообщенеие об изменении
+      const _id = isEditing ? id : data._id;
 
       // Если _id есть то перенаправляем пользователя
       // На страницу с этим постом созданным
-      navigate(`/posts/${id}`);
+      navigate(`/posts/${_id}`);
     } catch (error) {
       // Ошибка
       console.log(error);
@@ -189,7 +231,7 @@ export const AddPost = () => {
       />
       <div className={styles.buttons}>
         <Button onClick={onSubmit} size="large" variant="contained">
-          Опубликовать
+          {isEditing ? "Сохранить" : "Опубликовать"}
         </Button>
         <a href="/">
           <Button size="large">Отмена</Button>

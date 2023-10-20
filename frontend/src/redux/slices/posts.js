@@ -27,6 +27,20 @@ export const fetchTags = createAsyncThunk("tags/fetchTags", async () => {
   return response.data;
 });
 
+// Асинк запрос на удаление поста
+export const fetchRemovePost = createAsyncThunk(
+  "posts/fetchDeletePost",
+  async (id) => {
+    const response = await axios.delete(`/posts/${id}`);
+    // В первом варианте звпрос вернет id поста в action.payload
+    return id;
+
+    // Второй вариант, чтобы вернуть сообщение с сервера.
+    // Разница показана в extra reduser
+    // return response.data;
+  }
+);
+
 // Сам slice (одновременно создаем actions и reducers) - содержит:
 //  1) Имя
 //  2) Начальное состояние (подставляется)
@@ -64,6 +78,27 @@ const postsSlice = createSlice({
     builder.addCase(fetchTags.rejected, (state) => {
       state.tags.status = "error";
     });
+
+    // FETCH DELETE POST
+    // ПРИМ. pending и rejected тут икак не обработаны
+    // Поскольку там мы указываем состояние loading, а от него зависит отрисовка постов
+    // Если они будут меняться, то посты будут перерисовываться, на скелетон и обратно
+    // ( ЭТО МОЖНО ОБРАБОТАТЬ И ИНАЧЕ = ВАРИКОВ МНОГО)
+    builder.addCase(fetchRemovePost.pending, (state) => {});
+    builder.addCase(fetchRemovePost.fulfilled, (state, action) => {
+      state.posts.items = state.posts.items.filter(
+        // Первый вариант, где в payload - будет лежать id
+        // по этому id и отфильтруем стейт
+        (item) => item._id !== action.payload
+
+        // Второй вар, где в payload будет лежат ответ с сервера (пост удален)
+        //      соотв. фильтрация не пройдет
+        // В этом случае нужно обратится к action.meta.arg,
+        //        где и будет лежать переданный в action id поста
+        // (item) => item._id !== action.meta.arg
+      );
+    });
+    builder.addCase(fetchRemovePost.rejected, (state) => {});
   },
 });
 
