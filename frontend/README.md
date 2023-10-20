@@ -98,6 +98,20 @@ export const fetchTags = createAsyncThunk("tags/fetchTags", async () => {
   return response.data;
 });
 
+// Асинк запрос на удаление поста
+export const fetchRemovePost = createAsyncThunk(
+  "posts/fetchDeletePost",
+  async (id) => {
+    const response = await axios.delete(`/posts/${id}`);
+    // В первом варианте звпрос вернет id поста в action.payload
+    return id;
+
+    // Второй вариант, чтобы вернуть сообщение с сервера.
+    // Разница показана в extra reduser
+    // return response.data;
+  }
+);
+
 // Сам slice (одновременно создаем actions и reducers) - содержит:
 //  1) Имя
 //  2) Начальное состояние (подставляется)
@@ -135,7 +149,28 @@ const postsSlice = createSlice({
     builder.addCase(fetchTags.rejected, (state) => {
       state.tags.status = "error";
     });
-  },
+
+    // FETCH DELETE POST
+    // ПРИМ. pending и rejected тут икак не обработаны
+    // Поскольку там мы указываем состояние loading, а от него зависит отрисовка постов
+    // Если они будут меняться, то посты будут перерисовываться, на скелетон и обратно
+    // ( ЭТО МОЖНО ОБРАБОТАТЬ И ИНАЧЕ = ВАРИКОВ МНОГО)
+    builder.addCase(fetchRemovePost.pending, (state) => {});
+    builder.addCase(fetchRemovePost.fulfilled, (state, action) => {
+      state.posts.items = state.posts.items.filter(
+
+        // Первый вариант, где в payload - будет лежать id
+        // по этому id и отфильтруем стейт
+        (item) => item._id !== action.payload
+
+        // Второй вар, где в payload будет лежат ответ с сервера (пост удален)
+        //      соотв. фильтрация не пройдет
+        // В этом случае нужно обратится к action.meta.arg, 
+        //        где и будет лежать переданный в action id поста      
+        // (item) => item._id !== action.meta.arg
+      );
+    });
+    builder.addCase(fetchRemovePost.rejected, (state) => {});
 });
 
 // В результате postsSlice будет содержать объект с actions и reducers
@@ -782,6 +817,64 @@ const onSubmit = async () => {
 <br>
 
 # УДАЛЕНИЕ СТАТЬИ
+
+- [x] Принцип удаления такой. По скольку нам нужно удалить статью из базы данных + перерендерить список постов на обновленный без перезагрузки страницы - нужно использовать состояние Redux.
+- [x] Логика:
+
++ Нам нужен `async action`, который будет заниматься удалением поста из БД и из стейта. Мы сделали его в слайсте `posts` + его `extra reducer`.
++ Сам запрос `async action` из компонента при помощи `dispatch`
+
+```javascript
+// fetchRemovePost - просто принимает id поста
+// В слайсе этот id подставляется в запрос
+const onClickRemove = () => {
+  dispatch(fetchRemovePost(id));
+};
+```
+
+- [x] ПРИМ. ДОЛГО ЛОМАЛ ГОЛОВУ !!!
+
++ Удаление поста из стейта происходит как и в обычном React - т.е. беретя состояние и филтруется, где остаются посты, которые не равны по `id переданному в кач-ве action payload`.
++ Но есть разница в том, что будет возвращать `async action` и есть два примера.
++ Либо возвращается ответ от сервера в `action.payload`
++ Либо возвращается `id` в `action.payload`
+
+<br>
+
++ В зависимости от того, что будет возвращать `async action` - используется разный путь к `id` поста для фильтрации.
++ Это либо `action.meta.arg` либо `action.payload`
++ В коде ниже есть пояснение.
+
+```javascript
+// Асинк запрос на удаление поста
+export const fetchRemovePost = createAsyncThunk(
+  "posts/fetchDeletePost",
+  async (id) => {
+    const response = await axios.delete(`/posts/${id}`);
+    // В первом варианте звпрос вернет id поста в action.payload
+    return id;
+
+    // Второй вариант, чтобы вернуть сообщение с сервера.
+    // Разница показана в extra reduser
+    // return response.data;
+  }
+);
+
+
+builder.addCase(fetchRemovePost.fulfilled, (state, action) => {
+  state.posts.items = state.posts.items.filter(
+    // Первый вариант, где в payload - будет лежать id
+    // по этому id и отфильтруем стейт
+    (item) => item._id !== action.payload
+
+    // Второй вар, где в payload будет лежат ответ с сервера (пост удален)
+    //      соотв. фильтрация не пройдет
+    // В этом случае нужно обратится к action.meta.arg,
+    //        где и будет лежать переданный в action id поста
+    // (item) => item._id !== action.meta.arg
+  );
+});
+```
 
 
 
