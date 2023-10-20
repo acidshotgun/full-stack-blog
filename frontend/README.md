@@ -98,6 +98,20 @@ export const fetchTags = createAsyncThunk("tags/fetchTags", async () => {
   return response.data;
 });
 
+// Асинк запрос на удаление поста
+export const fetchRemovePost = createAsyncThunk(
+  "posts/fetchDeletePost",
+  async (id) => {
+    const response = await axios.delete(`/posts/${id}`);
+    // В первом варианте звпрос вернет id поста в action.payload
+    return id;
+
+    // Второй вариант, чтобы вернуть сообщение с сервера.
+    // Разница показана в extra reduser
+    // return response.data;
+  }
+);
+
 // Сам slice (одновременно создаем actions и reducers) - содержит:
 //  1) Имя
 //  2) Начальное состояние (подставляется)
@@ -135,7 +149,28 @@ const postsSlice = createSlice({
     builder.addCase(fetchTags.rejected, (state) => {
       state.tags.status = "error";
     });
-  },
+
+    // FETCH DELETE POST
+    // ПРИМ. pending и rejected тут икак не обработаны
+    // Поскольку там мы указываем состояние loading, а от него зависит отрисовка постов
+    // Если они будут меняться, то посты будут перерисовываться, на скелетон и обратно
+    // ( ЭТО МОЖНО ОБРАБОТАТЬ И ИНАЧЕ = ВАРИКОВ МНОГО)
+    builder.addCase(fetchRemovePost.pending, (state) => {});
+    builder.addCase(fetchRemovePost.fulfilled, (state, action) => {
+      state.posts.items = state.posts.items.filter(
+
+        // Первый вариант, где в payload - будет лежать id
+        // по этому id и отфильтруем стейт
+        (item) => item._id !== action.payload
+
+        // Второй вар, где в payload будет лежат ответ с сервера (пост удален)
+        //      соотв. фильтрация не пройдет
+        // В этом случае нужно обратится к action.meta.arg, 
+        //        где и будет лежать переданный в action id поста      
+        // (item) => item._id !== action.meta.arg
+      );
+    });
+    builder.addCase(fetchRemovePost.rejected, (state) => {});
 });
 
 // В результате postsSlice будет содержать объект с actions и reducers
@@ -658,10 +693,203 @@ export const Home = () => {
 
 - [x] Для создания статьи используется библиотека `react-simplemde-editor`. Это библиотека, которая позволяет создавать посты как в гитхаб с разными разметками.
 - [x] Hook form тут не нужен.
+- [x] + Redux тут не нужен достаточно локального стейта 
+
+<br>
+
+- [x] Данные которые вводятся в полях будут записаны в соответствующие стейты при помощи двустороннего связывания.
+
+**[КОМПОНЕНТ СОЗДАНИЯ ПОСТА](https://github.com/acidshotgun/full-stack-blog/blob/master/frontend/src/pages/AddPost/index.jsx)**
+
+- [x] ПРИМ. Чтобы разметка MarkDown отображалась корректно - нужна библиотека `react-markdown`
+
+```javascript
+// Это компонент, в который пропсом children помещяется текст. Он будет отображаться корректно.
+<ReactMarkdown children={data.text} />
+```
 
 <br>
 
 <h3>+ Загрузки картинки на сервак</h3>
+
+- [x] Логика тут отстой но напишу. На самом деле это делается иначе, тк в этом способе картинка грузится на сервер еще при ее выборе, а не при отправке статьи на серв.
+- [x] Логика здесь:
+
++ При помощи хука `useRef` создаем ref `inputFileRef`, который будет сяывать кнопку с элементом input, который служит для выбра изображения с компьютера.
+
+```javascript
+// Здесь для загрузки картинки используется тэг input с типом type = file
+// И при вызове он вызывает ф-ю handleChangeFile, которая при добавлении картинки грузит ее на серв + добавляет в стейт
+// При помощи ref - указываем ссылку ref, которую создали
+// Этот input скрыт
+
+// Вместо него мы будем нажимать на кнопку Button, которая быдует вызывать input
+// При помощи onClick={() => inputFileRef.current.click()}
+// Так нажав на кнопку вызовем input, который скрыт
+
+<Button
+  onClick={() => inputFileRef.current.click()}
+  variant="outlined"
+  size="large"
+>
+  Загрузить превью
+</Button>
+<input
+  ref={inputFileRef}
+  type="file"
+  onChange={handleChangeFile}
+  hidden
+/>
+
+
+// Ф-я, которая проверяет изменилось ли что то в инпуте при помощи event
+//  1) Создается FormData
+//  2) Получаем файл картинки из event.target.files[0]
+//  3) Добавляем этот файл в форму
+//  4) Отправляем форму с картинкой на сервер и возвращаем ответ в переменную
+//  5) url из data помещаем в стейт imageUrl - это ссылка на картинку
+//  6) Обработка ошибки
+
+// Те. если появляется файл event.target.files[0] - он поместится в FormData
+// Затем FormData отправится на серв и вернет data
+// url картинки помещаем в стейт
+const handleChangeFile = async (event) => {
+  try {
+    const formData = new FormData();
+    const file = event.target.files[0];
+    formData.append("image", file);
+    const { data } = await axios.post("/upload", formData);
+    setImageUrl(data.url);
+  } catch (error) {
+    console.log(error);
+    alert("Ошибка при загрузуке файла");
+  }
+};
+```
+
+<br>
+
+<h3>+ Отправка статьи на сервер</h3>
+
++ При клике на кнопку отправить - мы собираем статью по частям. Это данные из соответств полей в стейтах.
++ Делаем пост запрос по роуту для создания с созданным объектом с данными. В ответе получаем данные о серве (это на бэке прописано).
++ Кстати каждый запрос еще проверяет авторизацию по токену - помним.
++ Если статья создана и вернула нам данные, то достаем _id статьи
++ `navigate(`/posts/${id}`)` - полученный из хука `useNavigate` `react-router-dom` перенаправит на страницу с этой статьеё.  
+
+```javascript
+// Отправка статьи на сервер
+const onSubmit = async () => {
+  try {
+    // Загрузка - хз зачем !
+    setLoading(true);
+
+    // Собираем статью по полям (из стейтов)
+    const fields = {
+      title,
+      imageUrl,
+      // Из строки тегов делаем массив
+      tags: tags.split(","),
+      text,
+    };
+
+    // Достаем data из ответа когда послали статью на серв
+    const { data } = await axios.post("/posts", fields);
+
+    // Достаем _id из ответа (это _id статьи)
+    //  (Можно указать доп проверки на всякий случай)
+    // Типа если статья создана то мы должны получить _id
+    // Тк его возвращает сервер вместе с данными о посте
+    const id = data._id;
+
+    // Если _id есть то перенаправляем пользователя
+    // На страницу с этим постом созданным
+    navigate(`/posts/${id}`);
+  } catch (error) {
+    // Ошибка
+    console.log(error);
+  }
+};
+```
+
+<hr>
+<br>
+<br>
+
+# УДАЛЕНИЕ СТАТЬИ
+
+- [x] Принцип удаления такой. По скольку нам нужно удалить статью из базы данных + перерендерить список постов на обновленный без перезагрузки страницы - нужно использовать состояние Redux.
+- [x] Логика:
+
++ Нам нужен `async action`, который будет заниматься удалением поста из БД и из стейта. Мы сделали его в слайсте `posts` + его `extra reducer`.
++ Сам запрос `async action` из компонента при помощи `dispatch`
+
+```javascript
+// fetchRemovePost - просто принимает id поста
+// В слайсе этот id подставляется в запрос
+const onClickRemove = () => {
+  dispatch(fetchRemovePost(id));
+};
+```
+
+- [x] ПРИМ. ДОЛГО ЛОМАЛ ГОЛОВУ !!!
+
++ Удаление поста из стейта происходит как и в обычном React - т.е. беретя состояние и филтруется, где остаются посты, которые не равны по `id переданному в кач-ве action payload`.
++ Но есть разница в том, что будет возвращать `async action` и есть два примера.
++ Либо возвращается ответ от сервера в `action.payload`
++ Либо возвращается `id` в `action.payload`
+
+<br>
+
++ В зависимости от того, что будет возвращать `async action` - используется разный путь к `id` поста для фильтрации.
++ Это либо `action.meta.arg` либо `action.payload`
++ В коде ниже есть пояснение.
+
+```javascript
+// Асинк запрос на удаление поста
+export const fetchRemovePost = createAsyncThunk(
+  "posts/fetchDeletePost",
+  async (id) => {
+    const response = await axios.delete(`/posts/${id}`);
+    // В первом варианте звпрос вернет id поста в action.payload
+    return id;
+
+    // Второй вариант, чтобы вернуть сообщение с сервера.
+    // Разница показана в extra reduser
+    // return response.data;
+  }
+);
+
+
+builder.addCase(fetchRemovePost.fulfilled, (state, action) => {
+  state.posts.items = state.posts.items.filter(
+    // Первый вариант, где в payload - будет лежать id
+    // по этому id и отфильтруем стейт
+    (item) => item._id !== action.payload
+
+    // Второй вар, где в payload будет лежат ответ с сервера (пост удален)
+    //      соотв. фильтрация не пройдет
+    // В этом случае нужно обратится к action.meta.arg,
+    //        где и будет лежать переданный в action id поста
+    // (item) => item._id !== action.meta.arg
+  );
+});
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # ЗАДАЧИ:
 
