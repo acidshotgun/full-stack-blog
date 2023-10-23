@@ -76,7 +76,7 @@ export const Home = () => {
                   }}
                   createdAt={item.createdAt}
                   viewsCount={item.viewsCount}
-                  commentsCount={3}
+                  commentsCount={item.comments.length}
                   tags={item.tags}
                   isEditable={userData?.userData?._id === item.user._id}
                 />

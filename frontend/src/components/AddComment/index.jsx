@@ -6,13 +6,14 @@ import TextField from "@mui/material/TextField";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 
-export const Index = () => {
+export const Index = (userData) => {
+  console.log(userData);
   return (
     <>
       <div className={styles.root}>
         <Avatar
           classes={{ root: styles.avatar }}
-          src="https://mui.com/static/images/avatar/5.jpg"
+          src={userData.userData.userData.avatarUrl}
         />
         <div className={styles.form}>
           <TextField

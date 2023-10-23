@@ -8,6 +8,7 @@ import checkAuths from "./utils/checkAuths.js";
 // user routes api
 import userRoutes from "./routes/user-routes.js";
 import postsRoutes from "./routes/post-routes.js";
+import commentsRouter from "./routes/comments-routes.js";
 
 const app = express();
 
@@ -44,6 +45,7 @@ app.use("/uploads", express.static("uploads"));
 // Обработка роутов
 app.use(userRoutes);
 app.use(postsRoutes);
+app.use(commentsRouter);
 
 // Запрос на загрузку картинки
 //  1) Роут

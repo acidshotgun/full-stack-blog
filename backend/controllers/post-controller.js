@@ -87,6 +87,7 @@ const getAll = async (req, res) => {
     const posts = await PostModel.find()
       .sort({ createdAt: -1 })
       .populate("user")
+      .populate("comments")
       .exec();
 
     res.json(posts);
@@ -108,7 +109,14 @@ const getOne = async (req, res) => {
       { _id: postId },
       { $inc: { viewsCount: 1 } },
       { new: true }
-    ).populate("user");
+    )
+      .populate("user")
+      .populate({
+        path: "comments",
+        populate: {
+          path: "user",
+        },
+      });
 
     if (!updateResult) {
       return res.status(404).json({
