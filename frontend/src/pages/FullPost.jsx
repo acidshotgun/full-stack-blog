@@ -38,12 +38,17 @@ export const FullPost = () => {
       });
   }, []);
 
-  // Пока isLoading стоит в true - будет отрисовать скелетон
+  // Пока isLoading стоит в true - будет отрисовать скелетон (посты и комменты)
   // isLoading - пропс который принимает true \ false
   // true = skeleton, false = данные
   // Это логика прописана у компонента Post
   if (isLoading) {
-    return <Post isLoading={isLoading} />;
+    return (
+      <>
+        <Post isLoading={isLoading} />
+        <CommentsBlock isLoading={isLoading} />
+      </>
+    );
   }
 
   // Рендерим подставляя данные уже полученные и добавленные в стейт data
@@ -66,7 +71,7 @@ export const FullPost = () => {
         <ReactMarkdown children={data.text} />
       </Post>
       <CommentsBlock items={data.comments} isLoading={false}>
-        {userData ? <Index userData={userData} /> : null}
+        {userData ? <Index /> : null}
       </CommentsBlock>
     </>
   );

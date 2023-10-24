@@ -78,7 +78,7 @@ export const Home = () => {
                   viewsCount={item.viewsCount}
                   commentsCount={item.comments.length}
                   tags={item.tags}
-                  isEditable={userData?.userData?._id === item.user._id}
+                  isEditable={userData?._id === item.user._id}
                 />
               );
             })

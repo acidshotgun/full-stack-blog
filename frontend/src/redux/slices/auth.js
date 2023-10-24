@@ -5,7 +5,7 @@ import axios from "../../services/axiosConfig";
 // изначально data пустая + статус
 const initialState = {
   data: null,
-  status: "idle",
+  status: "loading",
 };
 
 // async action для пост запроса на логгирование.
@@ -69,7 +69,7 @@ const authSlice = createSlice({
       state.status = "loading";
     });
     builder.addCase(fetchAuth.fulfilled, (state, action) => {
-      state.status = "idle";
+      state.status = "loaded";
       state.data = action.payload;
     });
     builder.addCase(fetchAuth.rejected, (state) => {
@@ -83,7 +83,7 @@ const authSlice = createSlice({
       state.status = "loading";
     });
     builder.addCase(fetchAuthMe.fulfilled, (state, action) => {
-      state.status = "idle";
+      state.status = "loaded";
       state.data = action.payload;
     });
     builder.addCase(fetchAuthMe.rejected, (state) => {
