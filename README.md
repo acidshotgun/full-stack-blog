@@ -233,3 +233,10 @@ const create = async (req, res) => {
 export { create };
 ```
 
+<br>
+<br>
+<hr>
+
+# КОММЕНТАРИИ FRONTEND
+
+
