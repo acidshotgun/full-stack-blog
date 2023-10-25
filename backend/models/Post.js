@@ -32,6 +32,9 @@ const PostSchema = new mongoose.Schema(
       default: 0,
     },
     imageUrl: String,
+    // Комменты - это массив из ссылок на поста (type: ObjectId и ref этих комментов)
+    // ref - это связывание с конкретной моделью ("Comments")
+    // Изначально будет пустой массив - []
     comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comments" }],
   },
   {

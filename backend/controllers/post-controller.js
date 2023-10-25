@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import PostModel from "../models/Post.js";
 import UserModel from "../models/User.js";
+import CommentsModel from "../models/Comments.js";
 
 // Создание поста
 const create = async (req, res) => {
@@ -57,6 +58,13 @@ const remove = async (req, res) => {
         message: "Статья не найдена",
       });
     }
+
+    // Удаление комментариев у поста
+    // Ищет комменты по полю postId, который равен id поста в запросе
+    // Все совпадения буду удалены методом deleteMany
+    await CommentsModel.deleteMany({ postId: postId }).session(
+      deletePostSession
+    );
 
     await UserModel.findByIdAndUpdate(
       req.userId,
